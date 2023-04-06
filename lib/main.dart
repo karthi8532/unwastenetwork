@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:unwaste/apartmentview/apartment_view.dart';
-import 'package:unwaste/dashboard/dashboard.dart';
-import 'package:unwaste/login/login_page.dart';
-import 'package:unwaste/profileview.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:unwaste/splashscreen.dart';
 
 void main() {
+
   runApp(const MyApp());
 }
 

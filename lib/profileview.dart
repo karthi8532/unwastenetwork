@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/login/login_page.dart';
 import 'package:unwaste/splashscreen.dart';
 
@@ -10,7 +11,18 @@ class Profileview extends StatefulWidget {
   State<Profileview> createState() => _ProfileviewState();
 }
 
+
 class _ProfileviewState extends State<Profileview> {
+  String sessionmobile="";
+  String sessiontoken="";
+  String sessionname="";
+
+@override
+  void initState() {
+    // TODO: implement initState
+  getStringValuesSF();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(child: Scaffold(
@@ -35,11 +47,11 @@ class _ProfileviewState extends State<Profileview> {
                   Image.asset('assets/images/avatarmale.png',width: 100,height: 100,),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('Karthikeyan'),
+                    child: Text(sessionname),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('+91-9750045024'),
+                    child: Text(sessionmobile),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -82,8 +94,8 @@ class _ProfileviewState extends State<Profileview> {
               ),
               child: TextButton(
                 onPressed: (){
-                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>LoginPage()), (route) => false);
-                },
+                    logoutfunction(context);
+                   },
                 child: Text("Sign Out", style: const TextStyle(color: Colors.white, fontSize: 20),),
               ),
             ),
@@ -92,5 +104,25 @@ class _ProfileviewState extends State<Profileview> {
         ],
       ),
     ));
+  }
+Future getStringValuesSF() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  sessiontoken = prefs.getString('Token').toString();
+  sessionmobile = prefs.getString('Phone').toString();
+  sessionname = prefs.getString('Name').toString();
+  print(sessiontoken);
+  setState(() {});
+ }
+
+  logoutfunction(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      prefs.setBool("LoggedIn", false);
+      prefs.clear();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage(),),(route) => false,
+      );
+    });
   }
 }

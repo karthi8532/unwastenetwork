@@ -8,6 +8,16 @@ class AppColors {
   static const kSecondaryColor = Color(0xFF979797);
   static const kTextColor = Color(0xFF757575);
   static const kwhite = Color(0xFFffffff);
+  static const ktextcolor = Color(0xFF192C49BF);
+  static const kdashblue = Color(0xFF3D8BF2);
+  static const kdashbrown = Color(0xBFBE541C);
+
+  static const  backgroundColor = Color(0xFFFFFFFF);
+
+  static const  lightBlue = Color(0xFF4C9EEB);
+  static const  darkText = Color(0xFF14171F);
+  static const  myCartBackgroundColor = Color(0xFfE5E5E5);
+
 }
 
 class HexColor extends Color {

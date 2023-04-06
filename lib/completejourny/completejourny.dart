@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:unwaste/apartmentview/apartment_view.dart';
 import 'package:unwaste/profileview.dart';
 import 'package:unwaste/uploadclass.dart';
 
@@ -12,12 +11,17 @@ class CompleteJournyPage extends StatefulWidget {
 
 class _CompleteJournyPageState extends State<CompleteJournyPage> {
   @override
+  void reassemble() {
+    super.reassemble();
+  }
+
+  @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
+        /*appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 2,
           title: Text('Home-Dashboard',style: TextStyle(color: Colors.black87,fontSize: 16),),
@@ -25,6 +29,20 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
             InkWell(onTap: (){
               Navigator.push(context, MaterialPageRoute(builder: (context)=>Profileview()));
             }, child: Image.asset('assets/images/avatarmale.png',height: 40,width: 40,))
+          ],
+        ),*/
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 2,
+          title: Text('Home-Dashboard',style: TextStyle(color: Colors.black87,fontSize: 16),),
+          automaticallyImplyLeading: false,
+          actions: [
+            InkWell(onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>Profileview()));
+            }, child: Padding(
+              padding: const EdgeInsets.only(right: 15),
+              child: Image.asset('assets/images/avatarmale.png',height: 40,width: 40,),
+            ))
           ],
         ),
         body: Padding(
@@ -39,7 +57,6 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
               SizedBox(height: 5,),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
-
                 children: [
                   Container(
                     margin: const EdgeInsets.all(5.0),

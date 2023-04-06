@@ -19,7 +19,7 @@ class _UploadScreenState extends State<UploadScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text('Upload Garbage-Weight',style: TextStyle(color: Colors.black87,fontSize: 16),),
-
+        leading: Icon(Icons.arrow_back,color: Colors.black87,),
       ),
       body: SingleChildScrollView(
         child:
@@ -101,7 +101,7 @@ class _UploadScreenState extends State<UploadScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Image.asset('assets/images/apartmentview.png'),
+                                    Image.asset('assets/images/thankyouimage.png'),
                                     SizedBox(height: 10,),
                                     Text("Thank you!!",style:TextStyle(fontSize: 20),),
                                     SizedBox(height: 10,),

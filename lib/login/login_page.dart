@@ -1,10 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/appcolors.dart';
 import 'package:unwaste/dashboard/dashboard.dart';
 import 'package:unwaste/login/appconstants.dart';
-import 'package:unwaste/login/pageheader.dart';
-
+import 'package:unwaste/login/login_model.dart';
+import '../CustomSingleDialog.dart';
 import '../customformbutton.dart';
+import '../main.dart';
+import 'package:http/http.dart'as http;
 
 
 class LoginPage extends StatefulWidget {
@@ -17,7 +24,15 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   //
   final _loginFormKey = GlobalKey<FormState>();
-
+  TextEditingController edt_mobileno=TextEditingController();
+  TextEditingController edt_password=TextEditingController();
+  bool loading=false;
+  LoginModel loginModel=LoginModel();
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -30,6 +45,7 @@ class _LoginPageState extends State<LoginPage> {
             Container(
               width: 100,
               height: 100,
+              child: Image.asset('assets/images/logo.png'),
             ),
             Expanded(
               child: Container(
@@ -54,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                           Padding(
                             padding: const EdgeInsets.only(right: 10,top: 10,bottom: 10,),
                             child: TextField(
+                              controller: edt_mobileno,
                               obscureText: false,
                               textAlign: TextAlign.start,
                               maxLines: 1,
@@ -88,6 +105,7 @@ class _LoginPageState extends State<LoginPage> {
                           Padding(
                             padding: const EdgeInsets.only(right: 10,top: 10,bottom: 10,),
                             child: TextField(
+                              controller: edt_password,
                               obscureText: true,
                               textAlign: TextAlign.start,
                               maxLines: 1,
@@ -123,10 +141,9 @@ class _LoginPageState extends State<LoginPage> {
                           Padding(
                             padding: const EdgeInsets.only(right: 10,top: 10,bottom: 10,),
                             child: Center(
-                                child: CustomFormButton(innerText: 'Login', onPressed: _handleLoginUser,)),
+                                child: !loading?CustomFormButton(innerText: 'Login', onPressed: _handleLoginUser,):Center(child: CircularProgressIndicator(),)),
                           ),
                           const SizedBox(height: 18,),
-
                         ],
                       ),
                     ),
@@ -145,10 +162,130 @@ class _LoginPageState extends State<LoginPage> {
      /* ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Submitting data..')),
       );*/
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => Dashboardpage()),
-      );
+      requestCameraPermission();
+    }
+  }
+  Future<void> requestCameraPermission() async {
+
+    final serviceStatus = await Permission.camera.isGranted ;
+
+    bool isCameraOn = serviceStatus == ServiceStatus.enabled;
+
+    final status = await Permission.camera.request();
+
+    if (status == PermissionStatus.granted) {
+      requestLocationPermission();
+      //print()
+    } else if (status == PermissionStatus.denied) {
+      print('Permission denied');
+    } else if (status == PermissionStatus.permanentlyDenied) {
+      print('Permission Permanently Denied');
+      await openAppSettings();
+    }
+  }
+  Future<void> requestLocationPermission() async {
+
+    final serviceStatusLocation = await Permission.locationWhenInUse.isGranted ;
+
+    bool isLocation = serviceStatusLocation == ServiceStatus.enabled;
+
+    final status = await Permission.locationWhenInUse.request();
+
+    if (status == PermissionStatus.granted) {
+     getcallpsotmethod();
+    } else if (status == PermissionStatus.denied) {
+      print('Permission denied');
+    } else if (status == PermissionStatus.permanentlyDenied) {
+      print('Permission Permanently Denied');
+      await openAppSettings();
+    }
+
+  }
+  Future<void> getcallpsotmethod() async {
+    var headers = {"Content-Type": "application/json"};
+    var body = {
+      "username": "${edt_mobileno.text}",
+      "password": "${edt_password.text}",
+    };
+    setState(() {
+      loading = true;
+    });
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/auth/login'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+      setState(() {
+        loading = false;
+      });
+      print('REPOSD  ${jsonDecode(response.body)}');
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+          loginModel = LoginModel.fromJson(jsonDecode(response.body));
+          print(jsonDecode(response.body));
+          Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
+          final SharedPreferences prefs = await _prefs;
+          prefs.setString("Token", loginModel.data!.token.toString());
+          prefs.setString("Name", loginModel.data!.name.toString());
+          prefs.setString("Type", loginModel.data!.type.toString());
+          prefs.setString("Usertype", loginModel.data!.usertype.toString());
+          prefs.setString("Phone", loginModel.data!.phone.toString());
+          prefs.setString("Email", loginModel.data!.email.toString());
+          prefs.setString("Photo", loginModel.data!.photo.toString());
+          prefs.setString("Status", loginModel.data!.photo.toString());
+          prefs.setString("ID", loginModel.data!.id.toString());
+          prefs.setString("DriverID", loginModel.data!.driverId.toString());
+          prefs.setBool("LoggedIn", true);
+
+          Navigator.pushReplacement(
+            this.context,
+            MaterialPageRoute(builder: (context) => const Dashboardpage()),
+          );
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: "Failed to Connect Login Api",
+            );
+          },
+        );
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
     }
   }
 }
