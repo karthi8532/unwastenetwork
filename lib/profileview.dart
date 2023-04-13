@@ -16,6 +16,8 @@ class _ProfileviewState extends State<Profileview> {
   String sessionmobile="";
   String sessiontoken="";
   String sessionname="";
+  String sessionid="";
+  String sessionrouteid="";
 
 @override
   void initState() {
@@ -64,7 +66,7 @@ class _ProfileviewState extends State<Profileview> {
                           borderRadius:BorderRadius.all(Radius.circular(5)),
                           border: Border.all(color: Colors.blueAccent),
                         ),
-                        child: Text('DriverID:03342',style: TextStyle(fontSize: 12),),
+                        child: Text('DriverID:${sessionid}',style: TextStyle(fontSize: 12),),
                       ),
                       SizedBox(width: 5,),
                       Container(
@@ -75,7 +77,7 @@ class _ProfileviewState extends State<Profileview> {
                           borderRadius:BorderRadius.all(Radius.circular(5)),
                           border: Border.all(color: Colors.green),
                         ),
-                        child: Text('Route No.:01',style: TextStyle(fontSize: 12),),
+                        child: Text('Route No.:${sessionrouteid}',style: TextStyle(fontSize: 12),),
                       ),
                     ],
                   ),
@@ -110,6 +112,8 @@ Future getStringValuesSF() async {
   sessiontoken = prefs.getString('Token').toString();
   sessionmobile = prefs.getString('Phone').toString();
   sessionname = prefs.getString('Name').toString();
+  sessionid = prefs.getString('DriverID').toString();
+  sessionrouteid = prefs.getString('RouteId').toString();
   print(sessiontoken);
   setState(() {});
  }

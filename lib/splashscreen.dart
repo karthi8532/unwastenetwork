@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/dashboard/dashboard.dart';
+import 'package:unwaste/uploadclass.dart';
 
 import 'login/login_page.dart';
 
@@ -25,10 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
 
-    Timer(
-        Duration(seconds: 3),
-
-            () =>  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>islogged==false?LoginPage():Dashboardpage())));
+    Timer(Duration(seconds: 3),() =>  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>islogged==false?LoginPage():Dashboardpage())));
     /*   ? LoginScreen()
                 : islogged == null
                     ? LoginScreen()

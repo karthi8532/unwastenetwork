@@ -1,18 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/apartmentview/apartment_view.dart';
 import 'package:unwaste/appcolors.dart';
-import 'package:unwaste/dashboard/RouteModel.dart';
-import 'package:unwaste/dashboard/start_journymodel.dart';
-import 'package:unwaste/login/appconstants.dart';
 import 'package:unwaste/profileview.dart';
 import 'package:http/http.dart'as http;
 
 import '../CustomSingleDialog.dart';
+import '../apartmentview/PostLocation.dart';
+import '../appconstants/appconstants.dart';
+import 'dashboardmodel.dart';
 
 class Dashboardpage extends StatefulWidget {
   const Dashboardpage({Key? key}) : super(key: key);
@@ -25,19 +27,38 @@ class _DashboardpageState extends State<Dashboardpage> {
   String sessiontoken="";
   String sessionname="";
   String sessionid="";
-  RouteModel modell=RouteModel(data: []);
+  String sessionroutemasterid="";
+  String sessiondate="";
+  //RouteModel modell=RouteModel(data: []);
+
+  DashboardModel dashboardModel=DashboardModel(data: []);
+
   bool loading=false;
   late int postionselect=0;
   String cdate = DateFormat("yyyy-MM-dd").format(DateTime.now());
   bool startjourny=false;
+
+  var isTracking = false;
+  Timer? _timer;
+  List<String> _locations = [];
   @override
   void initState() {
     print(cdate);
+
     getStringValuesSF();
+
+    _timer = Timer.periodic(Duration(seconds: 30), (Timer t) {
+      PostLocationState().getCurrentPosition();
+    });
+    // _listenLocation();
+    // Timer.periodic(const Duration(seconds: 30), (_) => _listenLocation());
     super.initState();
   }
+
   @override
   void dispose() {
+    _timer?.cancel();
+    dashboardModel.data!.clear();
     super.dispose();
   }
 
@@ -89,7 +110,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                     borderRadius:BorderRadius.all(Radius.circular(5)),
                     border: Border.all(color: Colors.green),
                   ),
-                  child: Text('Route No.:01',style: TextStyle(fontSize: 12),),
+                  child: Text('Route No.:${sessionroutemasterid}',style: TextStyle(fontSize: 12),),
                 ),
                 Container(
                   margin: const EdgeInsets.all(5.0),
@@ -99,7 +120,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                     borderRadius:BorderRadius.all(Radius.circular(5)),
                     border: Border.all(color: AppColors.kdashbrown),
                   ),
-                  child: Text('Date:12.02.2023',style: TextStyle(fontSize: 12,color: Colors.brown),),
+                  child: Text('Date:${sessiondate}',style: TextStyle(fontSize: 12,color: Colors.brown),),
                 ),
               ],
               ),
@@ -117,9 +138,9 @@ class _DashboardpageState extends State<Dashboardpage> {
                   decoration: BoxDecoration(color: Colors.grey.shade100,borderRadius: BorderRadius.only(topLeft: Radius.circular(25),topRight: Radius.circular(25))),
                   child: Padding(
                     padding: const EdgeInsets.all(13.0),
-                    child: modell.data!.length>0?
+                    child: dashboardModel.data!.length>0?
                     ListView.builder(
-                        itemCount: modell.data!.length,
+                        itemCount: dashboardModel.data!.length,
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: (){
@@ -143,7 +164,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.symmetric(vertical: 5),
-                                        child: Text(modell.data![index].apratmentsName.toString()),
+                                        child: Text(dashboardModel.data![postionselect].apartment![index].name.toString()),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(vertical: 5),
@@ -152,7 +173,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                                           children: [
                                             Image.asset('assets/images/iconnavigate.png',color: AppColors.kdashblue,height: 18,width: 18,),
                                             SizedBox(width: 5,),
-                                            Text('${modell.data![index].apratmentsArea.toString()},${modell.data![index].apratmentsAddress.toString()}',style: TextStyle(fontSize: 10,color: Colors.black54),),
+                                            Text('${dashboardModel.data![postionselect].apartment![index].address.toString()},${dashboardModel.data![postionselect].apartment![index].area.toString()}',style: TextStyle(fontSize: 10,color: Colors.black54),),
                                           ],
                                         ),
                                       ),
@@ -189,7 +210,7 @@ class _DashboardpageState extends State<Dashboardpage> {
         ):Center(child: CircularProgressIndicator(),),
         bottomNavigationBar:
           Visibility(
-            visible: startjourny,
+            //visible: startjourny,
             child: ElevatedButton(style: ButtonStyle(
               shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
@@ -198,14 +219,13 @@ class _DashboardpageState extends State<Dashboardpage> {
                   )
               )
         ),
-            onPressed: () {
-              if (modell.data!.length == 0) {
+            onPressed: () async {
+            /*  if (dashboardModel.data!.length == 0) {
                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Data should not empty!')),);
-              } else {
-                Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                    ApartmentView(
-                        routeModel: modell, routeposition: postionselect)));
-              }
+              } else {*/
+
+                _getCurrentPosition();
+              //}
             },
             child: const SizedBox(
               height: kToolbarHeight,
@@ -230,14 +250,98 @@ class _DashboardpageState extends State<Dashboardpage> {
     sessionmobile = prefs.getString('Phone').toString();
     sessionname = prefs.getString('Name').toString();
     sessionid = prefs.getString('ID').toString();
-    getstartjournysinglelist();
+    sessionroutemasterid = prefs.getString('RouteId').toString();
+    sessiondate = prefs.getString('Date').toString();
+    //getstartjournysinglelist();
+    checkjournystartornot();
     //setState(() {});
   }
+
+  Future<void> checkjournystartornot() async {
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
+
+    var body = {
+      "date":AppConstants.cdate,
+      "route_id":sessionroutemasterid,
+      "driver_id":sessionid,
+    };
+    print(jsonEncode(body));
+    setState(() {
+      loading = true;
+    });
+    try {
+      final response = await http.post(
+         // Uri.parse(AppConstants.LIVE_URL + 'api/journey-log/list'),
+          Uri.parse(AppConstants.LIVE_URL + 'api/route-assigning/check-open-journey'),
+          body: jsonEncode(body),
+          headers: headers);
+      //print(jsonEncode(body));
+
+      //print('REPOSD  ${jsonDecode(response.body)['status']}');
+      setState(() {
+        loading = false;
+      });
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+          print('LENGTHHH${jsonDecode(response.body)['data'].length}');
+          if(jsonDecode(response.body)['data']['is_open_journey'].toString()=="1"){
+            //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>ApartmentView()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>
+                ApartmentView()));
+          }else{
+            getstartjournysinglelist();
+          }
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: "Failed to Connect Login Api",
+            );
+          },
+        );
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
+  }
+
   Future<void> getstartjournysinglelist() async {
     var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
 
     var body = {
-      "date":cdate
+      "date":AppConstants.cdate
     };
 
     setState(() {
@@ -268,14 +372,105 @@ class _DashboardpageState extends State<Dashboardpage> {
             },
           );
         } else {
-          modell = RouteModel.fromJson(jsonDecode(response.body));
+          dashboardModel = DashboardModel.fromJson(jsonDecode(response.body));
+          print(jsonDecode(response.body));
+
           setState(() {
-            if(modell.data!.length == 0){
+            if(dashboardModel.data!.length == 0){
               startjourny==false;
             }else{
               startjourny==true;
             }
           });
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: "Failed to Connect Login Api",
+            );
+          },
+        );
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
+  }
+
+  Future<void> _getCurrentPosition() async {
+    setState(() {
+      loading=true;
+    });
+    await Geolocator.getCurrentPosition(
+    desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) {
+    setState(() =>journystart(position.latitude,position.longitude));
+    }).catchError((e) {
+    debugPrint(e);
+    });
+  }
+  Future<void> journystart(lat,lang) async {
+    setState(() {
+      loading=true;
+    });
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
+
+    var body = {
+      "date":AppConstants.cdate,
+      "route_id":dashboardModel.data![0].routeMasterId.toString(),
+      "driver_id":dashboardModel.data![0].driverId.toString(),
+      "start_apartment_id":1,
+      "lat":lat,
+      "lng":lang,
+      "vehicle_id":dashboardModel.data![0].vehicleId.toString(),
+    };
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/journey-log/create'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+
+      print('REPOSD  ${jsonDecode(response.body)['status']}');
+
+      setState(() {
+        loading = false;
+      });
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>
+              ApartmentView()));
         }
       } else {
         showDialog(

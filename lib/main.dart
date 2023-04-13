@@ -1,10 +1,13 @@
+
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:unwaste/splashscreen.dart';
+const fetchBackground = "fetchBackground";
 
-void main() {
 
-  runApp(const MyApp());
+
+ void main()  {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

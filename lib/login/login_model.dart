@@ -54,14 +54,16 @@ class Data {
   String? licenseCopy;
   String? licenseNo;
   String? usertype;
-  Null? phone;
+  String? phone;
   String? email;
-  Null? emailVerifiedAt;
+  String? emailVerifiedAt;
   String? photo;
-  Null? lastAccessAt;
+  String? lastAccessAt;
   int? status;
   String? createdAt;
   List<String>? weightUnits;
+  int? routeId;
+  int? wastageId;
 
   Data(
       {this.token,
@@ -79,7 +81,9 @@ class Data {
         this.lastAccessAt,
         this.status,
         this.createdAt,
-        this.weightUnits});
+        this.weightUnits,
+        this.routeId,
+        this.wastageId});
 
   Data.fromJson(Map<String, dynamic> json) {
     token = json['token'];
@@ -98,6 +102,8 @@ class Data {
     status = json['status'];
     createdAt = json['created_at'];
     weightUnits = json['weight_units'].cast<String>();
+    routeId = json['route_id'];
+    wastageId = json['wastage_id'];
   }
 
   Map<String, dynamic> toJson() {
@@ -118,6 +124,8 @@ class Data {
     data['status'] = this.status;
     data['created_at'] = this.createdAt;
     data['weight_units'] = this.weightUnits;
+    data['route_id'] = this.routeId;
+    data['wastage_id'] = this.wastageId;
     return data;
   }
 }

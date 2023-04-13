@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/appcolors.dart';
+import 'package:unwaste/appconstants/appconstants.dart';
 import 'package:unwaste/dashboard/dashboard.dart';
-import 'package:unwaste/login/appconstants.dart';
 import 'package:unwaste/login/login_model.dart';
 import '../CustomSingleDialog.dart';
 import '../customformbutton.dart';
@@ -30,8 +30,18 @@ class _LoginPageState extends State<LoginPage> {
   LoginModel loginModel=LoginModel();
   @override
   void initState() {
-    // TODO: implement initState
+
     super.initState();
+    /*Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: true,
+    );
+
+    Workmanager().registerPeriodicTask(
+      "1",
+      fetchBackground,
+      frequency: const Duration(minutes: 1),
+    );*/
   }
   @override
   Widget build(BuildContext context) {
@@ -249,6 +259,10 @@ class _LoginPageState extends State<LoginPage> {
           prefs.setString("Status", loginModel.data!.photo.toString());
           prefs.setString("ID", loginModel.data!.id.toString());
           prefs.setString("DriverID", loginModel.data!.driverId.toString());
+          prefs.setString("RouteId", loginModel.data!.routeId.toString());
+          prefs.setString("WastageID", loginModel.data!.wastageId.toString());
+          prefs.setString("Date", loginModel.data!.createdAt.toString().substring(0,10));
+          prefs.setStringList("TypeList", loginModel.data!.weightUnits!.toList());
           prefs.setBool("LoggedIn", true);
 
           Navigator.pushReplacement(
@@ -288,4 +302,5 @@ class _LoginPageState extends State<LoginPage> {
       throw Exception('Internet is down');
     }
   }
+
 }

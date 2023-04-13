@@ -1,6 +1,16 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unwaste/completejourny/complete_model.dart';
 import 'package:unwaste/profileview.dart';
+import 'package:http/http.dart'as http;
 import 'package:unwaste/uploadclass.dart';
+
+import '../CustomSingleDialog.dart';
+import '../appconstants/appconstants.dart';
 
 class CompleteJournyPage extends StatefulWidget {
   const CompleteJournyPage({Key? key}) : super(key: key);
@@ -10,11 +20,20 @@ class CompleteJournyPage extends StatefulWidget {
 }
 
 class _CompleteJournyPageState extends State<CompleteJournyPage> {
+  String sessionmobile="";
+  String sessiontoken="";
+  String sessiondriverID="";
+  String sessionname="";
+  String sessionrouteid="";
+  String sessiondate="";
+  String sessionwastageid="";
+  bool loading=false;
+  CompleteModel completemodel=CompleteModel();
   @override
-  void reassemble() {
-    super.reassemble();
+  void initState() {
+    getStringValuesSF();
+    super.initState();
   }
-
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -45,7 +64,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
             ))
           ],
         ),
-        body: Padding(
+        body: !loading?Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +72,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
             children: [
               Text('Hello,Welcome',style: TextStyle(fontSize: 12,color: Colors.black54),),
               SizedBox(height: 5,),
-              Text('Karthikeyan',style: TextStyle(fontWeight: FontWeight.bold),),
+              Text(sessionname,style: TextStyle(fontWeight: FontWeight.bold),),
               SizedBox(height: 5,),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -66,7 +85,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                       borderRadius:BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.blueAccent),
                     ),
-                    child: Text('DriverID:03342',style: TextStyle(fontSize: 12),),
+                    child: Text('DriverID:${sessiondriverID}',style: TextStyle(fontSize: 12),),
                   ),
                   Container(
                     margin: const EdgeInsets.all(5.0),
@@ -76,7 +95,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                       borderRadius:BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.green),
                     ),
-                    child: Text('Route No.:01',style: TextStyle(fontSize: 12),),
+                    child: Text('Route No.:${sessionrouteid}',style: TextStyle(fontSize: 12),),
                   ),
                   Container(
                     margin: const EdgeInsets.all(5.0),
@@ -86,7 +105,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                       borderRadius:BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.brown),
                     ),
-                    child: Text('Date:12.02.2023',style: TextStyle(fontSize: 12),),
+                    child: Text('Date:${sessiondate}',style: TextStyle(fontSize: 12),),
                   ),
                 ],
               ),
@@ -101,12 +120,11 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
               SizedBox(height: 25,),
               Expanded(
                 child: Container(
-
                   decoration: BoxDecoration(color: Colors.grey.shade100,borderRadius: BorderRadius.only(topLeft: Radius.circular(25),topRight: Radius.circular(25))),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: ListView.builder(
-                        itemCount: 5,
+                    child:completemodel.data!.isNotEmpty? ListView.builder(
+                        itemCount:completemodel.data!.length,
                         itemBuilder: (BuildContext context, int index) {
                           return Card(
                             child: Row(
@@ -122,7 +140,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                                   children: [
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 5),
-                                      child: Text('VTS Vista height',),
+                                      child: Text(completemodel.data![index].name.toString()),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -130,7 +148,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
                                           Icon(Icons.navigation,color: Colors.blue,size:14,),
-                                          Text('Gopala puram,coimbatore',style: TextStyle(fontSize: 10,color: Colors.black54),),
+                                          Text('${completemodel.data![index].address.toString()},${completemodel.data![index].area.toString()}',style: TextStyle(fontSize: 10,color: Colors.black54),),
                                         ],
                                       ),
                                     ),
@@ -147,7 +165,8 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                                         children: [
                                           Icon(Icons.delete_outline_outlined,color: Colors.red,size:20,),
                                           Text('Bin/Bag-',style: TextStyle(fontSize: 12,color: Colors.black54),),
-                                          Text('8',style: TextStyle(fontSize: 14,color: Colors.black87,fontWeight: FontWeight.bold),),
+                                          SizedBox(width: 3,),
+                                          Text('${completemodel.data![index].wastageCount.toString()}',style: TextStyle(fontSize: 14,color: Colors.black87,fontWeight: FontWeight.bold),),
                                           Expanded(
                                             child: Align(
                                                 alignment: Alignment.topRight,
@@ -164,14 +183,15 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                               ],
                             ),
                           );
-                        }),
+                        }):Center(child: Text('No Data!'),
                   ),
                 ),
-              ),
+                ),
+              )
             ],
           ),
-        ),
-        bottomNavigationBar: ElevatedButton(style: ButtonStyle(
+        ):CircularProgressIndicator(),
+        bottomNavigationBar:!loading? ElevatedButton(style: ButtonStyle(
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                 RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
@@ -181,6 +201,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
         ),
           onPressed: (){
             Navigator.push(context, MaterialPageRoute(builder: (context)=>UploadScreen()));
+            //_getCurrentPosition();
           },
           child: const SizedBox(
             height: kToolbarHeight,
@@ -194,8 +215,204 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
               ),
             ),
           ),
-        ),
+        ):Center(child: CircularProgressIndicator(),),
       ),
     );
+  }
+  Future getStringValuesSF() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    sessiondriverID = prefs.getString('DriverID').toString();
+    sessiontoken = prefs.getString('Token').toString();
+    sessionmobile = prefs.getString('Phone').toString();
+    sessionname = prefs.getString('Name').toString();
+    sessionrouteid = prefs.getString('RouteId').toString();
+    sessionwastageid = prefs.getString('WastageID').toString();
+    sessiondate = prefs.getString('Date').toString();
+    print(sessiontoken);
+    setState(() {
+
+    });
+    getcompletedjournylist();
+  }
+
+  Future<void> getcompletedjournylist() async {
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
+
+    var body = {
+      "date":AppConstants.cdate,
+      "route_id":sessionrouteid,
+      "driver_id":sessiondriverID,
+    };
+
+    setState(() {
+      loading = true;
+    });
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/route-assigning/get-completed-apartment-list-day'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+
+      print('REPOSD  ${jsonDecode(response.body)['status']}');
+      setState(() {
+        loading = false;
+      });
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+         /* dashboardModel = DashboardModel.fromJson(jsonDecode(response.body));
+          print(jsonDecode(response.body))*/;
+          completemodel=CompleteModel.fromJson(jsonDecode(response.body));
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: "Failed to Connect Login Api",
+            );
+          },
+        );
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
+  }
+  Future<void> _getCurrentPosition() async {
+    setState(() {
+      loading=true;
+    });
+    await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) {
+      setState(() =>endjourney(position.latitude,position.longitude));
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+  Future<void> endjourney(lat,lang) async {
+
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken'};
+    var body = {
+
+      "date":AppConstants.cdate,
+      "route_id":sessionrouteid,
+      "driver_id":sessiondriverID,
+      "start_apartment_id":"3",
+      "lat":lat,
+      "lng":lang,
+      "vehicle_id":"2"
+    };
+    setState(() {
+      loading = true;
+    });
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/journey-log/edit'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+      print(headers);
+      setState(() {
+        loading = false;
+      });
+      print('REPOSD  ${jsonDecode(response.body)}');
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+
+          showDialog<void>(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: Text('${jsonDecode(response.body)['message'].toString()}'),
+                actions: <Widget>[
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      textStyle: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    child: const Text('Ok'),
+                    onPressed: () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> UploadScreen()));
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: '${jsonDecode(response.body)['message']}',
+            );
+          },
+        );
+        // logoutfunction(context);
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
   }
 }

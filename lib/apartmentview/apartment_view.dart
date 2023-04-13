@@ -1,13 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/CustomSingleDialog.dart';
+import 'package:unwaste/apartmentview/apartment_model.dart';
 import 'package:unwaste/completejourny/completejourny.dart';
 import 'package:unwaste/dashboard/RouteModel.dart';
 import 'package:unwaste/login/login_page.dart';
@@ -17,11 +20,11 @@ import '../appcolors.dart';
 import '../appconstants/appconstants.dart';
 import '../customformbutton.dart';
 import '../dashboard/start_journymodel.dart';
+import 'PostLocation.dart';
 
 class ApartmentView extends StatefulWidget {
-   ApartmentView({Key? key,required this.routeModel,required this.routeposition}) : super(key: key,);
-    RouteModel routeModel;
-    late int routeposition;
+   ApartmentView({Key? key,/*required this.routeModel,required this.routeposition*/}) : super(key: key,);
+
 
   @override
   State<ApartmentView> createState() => _ApartmentViewState();
@@ -33,15 +36,32 @@ class _ApartmentViewState extends State<ApartmentView> {
   int qty=0;
   String sessionmobile="";
   String sessiontoken="";
+  String sessiondriverID="";
   String sessionname="";
+  String sessionrouteid="";
+  String sessionwastageid="";
   bool loading=false;
-
+  ApartmentModel model=ApartmentModel();
+  int totalapartmentcount=0;
+  int currentapartmentcount=0;
+  String buttonname="";
+  int?nodata=0;
+  bool qtycon =false;
+  Timer? _timer;
   @override
   initState() {
     super.initState();
     //int routeposition1=routeposition;
     this._outputController = new TextEditingController();
     getStringValuesSF();
+    _timer = Timer.periodic(Duration(seconds: 30), (Timer t) {
+      PostLocationState().getCurrentPosition();
+    });
+  }
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
   @override
   Widget build(BuildContext context) {
@@ -59,7 +79,7 @@ class _ApartmentViewState extends State<ApartmentView> {
           },
             child: Icon(Icons.arrow_back,color: Colors.black87,)),
       ),
-      body: SingleChildScrollView(
+      body: !loading?SingleChildScrollView(
         child: Column(
           children: [
             Card(
@@ -76,7 +96,7 @@ class _ApartmentViewState extends State<ApartmentView> {
                   // Add padding around the row widget
                   Padding(
                     padding: const EdgeInsets.all(15),
-                    child: Column(
+                    child:model.data![0].apartment!.isNotEmpty? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Add an image widget to display an image
@@ -89,7 +109,7 @@ class _ApartmentViewState extends State<ApartmentView> {
                         SizedBox(
                           height: 10,
                         ),
-                        Text(widget.routeModel.data![widget.routeposition].apratmentsName.toString(),style: TextStyle(fontWeight: FontWeight.bold),),
+                        Text(model.data![0].apartment![0].name.toString()=="null"?"-":model.data![0].apartment![0].name.toString(),style: TextStyle(fontWeight: FontWeight.bold),),
                         SizedBox(
                           height: 5,
                         ),
@@ -100,15 +120,15 @@ class _ApartmentViewState extends State<ApartmentView> {
                             children: [
                               Image.asset('assets/images/iconnavigate.png',color: AppColors.kdashblue,height: 18,width: 18,),
                               SizedBox(width: 5,),
-                              Text('${widget.routeModel.data![widget.routeposition].apratmentsArea.toString()},${widget.routeModel.data![widget.routeposition].apratmentsAddress.toString()}',style: TextStyle(fontSize: 10),),
+                              Text('${model.data![0].apartment![0].area.toString()==null?"-":model.data![0].apartment![0].area.toString()},${model.data![0].apartment![0].address.toString()=="null"?"-":model.data![0].apartment![0].address.toString()}',style: TextStyle(fontSize: 10),),
                             ],
                           ),
                         ),
                       ],
-                    ),
+                    ):Center(child: Text('No Data!')),
                   ),
                 ],
-              ),
+              )//:Center(child: Text('No data'),),
             ),
             SizedBox(height: 10,),
             Container(
@@ -119,7 +139,7 @@ class _ApartmentViewState extends State<ApartmentView> {
               ),),
             ),
             SizedBox(height: 10,),
-            Container(
+            model.data![0].apartment!.isNotEmpty?Container(
               width: MediaQuery.of(context).size.width * 0.9,
               height: 45,
               child: ElevatedButton.icon(onPressed: () {
@@ -127,9 +147,10 @@ class _ApartmentViewState extends State<ApartmentView> {
                   }, icon: Icon(Icons.qr_code,color: Colors.white,),label: Text('Scan QR'),style: ElevatedButton.styleFrom(
                   primary: Colors.black87 //elevated btton background color
               ),),
-            ),
+            ):Container(),
             SizedBox(height: 10,),
-            Text('${widget.routeModel.data![widget.routeposition].apratmentsName.toString()}',style: TextStyle(fontSize: 16),),
+            model.data![0].apartment!.isNotEmpty?
+            Text(model.data![0].apartment![0].name.toString().isEmpty?"-":model.data![0].apartment![0].name.toString(),style: TextStyle(fontSize: 16),):Text(''),
             SizedBox(
               height: 10,
             ),
@@ -176,50 +197,75 @@ class _ApartmentViewState extends State<ApartmentView> {
                   ],
                 ),
               ),*/
-              child:Container(
-                padding: EdgeInsets.all(8),
-                width: 150,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.lightBlue)),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    InkWell(
-                      onTap: (){
-                        decrement();
-                      },
-                      child: Icon(
-                        Icons.remove,
-                        size: 18,
-                        color: AppColors.lightBlue,
+              child:Visibility(
+                visible: qtycon,
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  width: 150,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.lightBlue)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      InkWell(
+                        onTap: (){
+                          decrement();
+                        },
+                        child: const Icon(
+                          Icons.remove,
+                          size: 18,
+                          color: AppColors.lightBlue,
+                        ),
                       ),
-                    ),
-                    Text(
-                      qty.toString(),
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: AppColors.lightBlue,
+                      Text(
+                        qty.toString(),
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: AppColors.lightBlue,
+                        ),
                       ),
-                    ),
-                    InkWell(
-                      onTap: (){
-                        increment();
-                      },
-                      child: Icon(
-                        Icons.add,
-                        size: 18,
-                        color: AppColors.lightBlue,
+                      InkWell(
+                        onTap: (){
+                          increment();
+                        },
+                        child: Icon(
+                          Icons.add,
+                          size: 18,
+                          color: AppColors.lightBlue,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
             SizedBox(
               height: 15,
             ),
-              !loading?Container(
+            !loading?Container(
+              //width: size.width * 0.8,
+                width: size.width * 0.9,
+                decoration: BoxDecoration(
+                  color: const Color(0xDD000000),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: model.data![0].apartment!.isNotEmpty?TextButton(
+                  onPressed: (){
+                    //Navigator.push(context, MaterialPageRoute(builder: (context)=>const CompleteJournyPage()));
+                    if(qty==0){
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please Enter Qty..')),);
+                    }else {
+                      submitwastage();
+                    }
+                  },
+                  child: Text('Save', style: const TextStyle(color: Colors.white, fontSize: 20),),
+                ):Container()
+            ):Center(child: CircularProgressIndicator(),),
+            SizedBox(
+              height: 15,
+            ),
+           /* !loading?Container(
               //width: size.width * 0.8,
               width: size.width * 0.9,
               decoration: BoxDecoration(
@@ -233,11 +279,11 @@ class _ApartmentViewState extends State<ApartmentView> {
                 },
                 child: Text('Submit', style: const TextStyle(color: Colors.white, fontSize: 20),),
               )
-            ):Center(child: CircularProgressIndicator(),),
+            ):Center(child: CircularProgressIndicator(),),*/
           ],
         ),
 
-      ),
+      ):Center(child: CircularProgressIndicator(),),
     ));
   }
 
@@ -264,55 +310,153 @@ class _ApartmentViewState extends State<ApartmentView> {
     String ? barcode = await scanner.scan();
     if (barcode == null) {
       print('nothing return.');
-    } else {
-      this._outputController.text = barcode;
+      setState(() {
+        qtycon=false;
+      });
       showDialog(
         barrierColor: Colors.black26,
         context: context,
         barrierDismissible: false,
         builder: (context) {
           return CustomDialogSingle(
-            title: "Scanned",
+            title: "Invalid Barcode",
             description: _outputController.text,
           );
         },
       );
+    } else {
+      _outputController.text="";
+      this._outputController.text = barcode;
+      setState(() {
+        if(barcode.toString()==model.data![0].apartment![0].qrcode.toString()){
+          print('BARCODE ${barcode}');
+          qtycon=true;
+        }else{
+          qtycon=false;
+        }
+      });
+
     }
   }
 
   Future getStringValuesSF() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    sessiondriverID = prefs.getString('DriverID').toString();
     sessiontoken = prefs.getString('Token').toString();
     sessionmobile = prefs.getString('Phone').toString();
     sessionname = prefs.getString('Name').toString();
+    sessionrouteid = prefs.getString('RouteId').toString();
+    sessionwastageid = prefs.getString('WastageID').toString();
     print(sessiontoken);
-    setState(() {});
 
+    getlist();
   }
 
-  Future<void> submitwastage() async {
+  Future<void> getlist() async {
+    setState(() {
+      loading = true;
+    });
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken'};
+    var body = {
+
+      "date":AppConstants.cdate,
+      "route_id":"1",
+      "driver_id":sessiondriverID
+    };
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/route-assigning/get-driver-assigned-apartment'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+      print(headers);
+      setState(() {
+        loading = false;
+      });
+      //print('REPOSD  ${jsonDecode(response.body)}');
+     // print('REPOSDD ${jsonDecode(response.body)['apartment']}');
+
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          model.data![0].apartment=null;
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+
+          model=ApartmentModel.fromJson(jsonDecode(response.body));
+          totalapartmentcount=int.parse(model.data![0].totalApartmentCount.toString());
+          currentapartmentcount=int.parse(model.data![0].wastageLogAddedApartmentCount.toString());
+          print('PRINT${model.data![0].apartment![0].name.toString()=="null"?"-":""}');
+
+          if(totalapartmentcount-currentapartmentcount<0){
+            print('COUNT COMPLETE${totalapartmentcount-currentapartmentcount}');
+            Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                CompleteJournyPage()));
+          }
+
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: '${jsonDecode(response.body)['message']}',
+            );
+          },
+        );
+        // logoutfunction(context);
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
+  }
+
+  Future<void> endjourney() async {
 
     var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken'};
     var body = {
 
-      "vehicle_id":"2",
-      "driver_id":"3",
-      "apartment_id":"5",
-      "route_master_id":"3",
-      "wastage_id":"2",
-      "wastage_count":"2",
-      "wastage_count":qty,
-      "date":"2023-04-02",
-      "status":0,
-      "photo":'',
-      "remarks":"Test"
+      "date":"2",
+      "route_id":sessiontoken,
+      "driver_id":sessiondriverID,
+      "start_apartment_id":"3",
+      "lat":"2",
+      "lng":"2",
+      "vehicle_id":qty
     };
     setState(() {
       loading = true;
     });
     try {
       final response = await http.post(
-          Uri.parse(AppConstants.LIVE_URL + 'api/wastage-log/create'),
+          Uri.parse(AppConstants.LIVE_URL + 'api/journey-log/create'),
           body: jsonEncode(body),
           headers: headers);
       print(jsonEncode(body));
@@ -353,7 +497,7 @@ class _ApartmentViewState extends State<ApartmentView> {
             );
           },
         );
-       // logoutfunction(context);
+        // logoutfunction(context);
       }
     } on SocketException {
       setState(() {
@@ -375,8 +519,196 @@ class _ApartmentViewState extends State<ApartmentView> {
     }
   }
 
-  static Future<void> refreshToekn() async {
+  Future<void> submitwastage() async {
 
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken'};
+    var body = {
+
+      "vehicle_id":"1",
+      "driver_id":sessiondriverID,
+      "apartment_id":model.data![0].apartment![0].id.toString(),
+      "route_master_id":sessionrouteid,
+      "wastage_id":sessionwastageid.toString(),
+      "wastage_count":qty,
+      "date":AppConstants.cdate,
+      "status":0,
+      "photo":'',
+      "remarks":"Test"
+    };
+    setState(() {
+      loading = true;
+    });
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/wastage-log/create'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+      print(headers);
+      setState(() {
+        loading = false;
+      });
+      print('REPOSD  ${jsonDecode(response.body)}');
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message'].toString()}',
+              );
+            },
+          );
+        } else {
+          /*SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 100.0),
+            content: Text('${jsonDecode(response.body)['message'].toString()}'),
+          );*/
+          showDialog<void>(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: Text('${jsonDecode(response.body)['message'].toString()}'),
+                actions: <Widget>[
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      textStyle: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    child: const Text('Ok'),
+                    onPressed: () {
+                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>ApartmentView()));
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+          //setState(() {});
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: '${jsonDecode(response.body)['message']}',
+            );
+          },
+        );
+       // logoutfunction(context);
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
+  }
+  Future<void> _getCurrentPosition() async {
+    setState(() {
+      loading=true;
+    });
+    await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) {
+      setState(() =>journyclose(position.latitude,position.longitude));
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+  Future<void> journyclose(lat,lang) async {
+    setState(() {
+      loading=true;
+    });
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
+
+    var body = {
+      "date":AppConstants.cdate,
+      "route_id":sessionrouteid,
+      "driver_id":sessiondriverID,
+      "start_apartment_id":model.data![0].apartment![0].id,
+      "lat":lat,
+      "lng":lang,
+      "vehicle_id":1,
+    };
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/wastage-log/edit'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+
+      print('REPOSD  ${jsonDecode(response.body)['status']}');
+
+      setState(() {
+        loading = false;
+      });
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+          Navigator.push(context, MaterialPageRoute(builder: (context) =>
+              CompleteJournyPage()));
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: "Failed to Connect Login Api",
+            );
+          },
+        );
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
   }
   static void navigateTo(double lat, double lng) async {
     var uri = Uri.parse("google.navigation:q=$lat,$lng&mode=d");
@@ -388,8 +720,8 @@ class _ApartmentViewState extends State<ApartmentView> {
   }
   openMapsSheet(context) async {
     try {
-      final coords = Coords(double.parse(widget.routeModel.data![widget.routeposition].apratmentsLat.toString()), double.parse(widget.routeModel.data![widget.routeposition].apratmentsLng.toString()));
-      final title = widget.routeModel.data![widget.routeposition].apratmentsName.toString();
+      final coords = Coords(double.parse(model.data![0].apartment![0].lat.toString().toString()), double.parse(model.data![0].apartment![0].lng.toString().toString()));
+      final title = model.data![0].apartment![0].name.toString().toString();
       final availableMaps = await MapLauncher.installedMaps;
       showModalBottomSheet(
         context: context,
