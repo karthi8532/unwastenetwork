@@ -308,6 +308,7 @@ class _ApartmentViewState extends State<ApartmentView> {
     print('inside');
     await Permission.camera.request();
     String ? barcode = await scanner.scan();
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     if (barcode == null) {
       print('nothing return.');
       setState(() {
@@ -327,14 +328,42 @@ class _ApartmentViewState extends State<ApartmentView> {
     } else {
       _outputController.text="";
       this._outputController.text = barcode;
-      setState(() {
-        if(barcode.toString()==model.data![0].apartment![0].qrcode.toString()){
-          print('BARCODE ${barcode}');
-          qtycon=true;
+
+
+      try{
+
+        var _distanceInMeters = await Geolocator.distanceBetween(
+          double.parse(model.data![0].apartment![0].lat.toString()),
+          double.parse(model.data![0].apartment![0].lng.toString()),
+          position.latitude,
+          position.longitude,
+        );
+        if(_distanceInMeters>100){
+          showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                content: Text('Distance Between  100 Meters only!'),
+              )
+          );
         }else{
-          qtycon=false;
+          setState(() {
+            if(barcode.toString()==model.data![0].apartment![0].qrcode.toString()){
+            print('BARCODE ${barcode}');
+            qtycon=true;
+          }else{
+            qtycon=false;
+            showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  content: Text('Invalid QR Code'),
+                )
+            );
+          }
+        });
         }
-      });
+      }catch(e){
+        print(e.toString());
+      }
 
     }
   }
@@ -402,6 +431,7 @@ class _ApartmentViewState extends State<ApartmentView> {
             Navigator.push(context, MaterialPageRoute(builder: (context) =>
                 CompleteJournyPage()));
           }
+
 
         }
       } else {
