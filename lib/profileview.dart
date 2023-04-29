@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unwaste/appcolors.dart';
 import 'package:unwaste/login/login_page.dart';
 import 'package:unwaste/splashscreen.dart';
 
@@ -18,6 +20,7 @@ class _ProfileviewState extends State<Profileview> {
   String sessionname="";
   String sessionid="";
   String sessionrouteid="";
+  String sessionroutename="";
 
 @override
   void initState() {
@@ -29,8 +32,9 @@ class _ProfileviewState extends State<Profileview> {
   Widget build(BuildContext context) {
     return SafeArea(child: Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 2,
         title: Text('Profile',style: TextStyle(color: Colors.black87,fontSize: 16),),
         actions: [
           InkWell(child: Icon(Icons.clear,color: Colors.black87,),onTap: (){
@@ -41,18 +45,20 @@ class _ProfileviewState extends State<Profileview> {
       body: Column(
         mainAxisAlignment:  MainAxisAlignment.spaceBetween,
         children: [
+
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Card(
               child: Column(
                 children: [
+                  Image.asset('assets/images/logo.png',width: 100,height: 100,),
                   Image.asset('assets/images/avatarmale.png',width: 100,height: 100,),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text(sessionname),
+                    child: Text(sessionname,style: TextStyle(fontWeight: FontWeight.bold,fontSize: 14),),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.only(top: 5.0),
                     child: Text(sessionmobile),
                   ),
                   Row(
@@ -66,7 +72,7 @@ class _ProfileviewState extends State<Profileview> {
                           borderRadius:BorderRadius.all(Radius.circular(5)),
                           border: Border.all(color: Colors.blueAccent),
                         ),
-                        child: Text('DriverID:${sessionid}',style: TextStyle(fontSize: 12),),
+                        child: Text('Driver ID : ${sessionid}',style: TextStyle(fontSize: 12),),
                       ),
                       SizedBox(width: 5,),
                       Container(
@@ -77,7 +83,7 @@ class _ProfileviewState extends State<Profileview> {
                           borderRadius:BorderRadius.all(Radius.circular(5)),
                           border: Border.all(color: Colors.green),
                         ),
-                        child: Text('Route No.:${sessionrouteid}',style: TextStyle(fontSize: 12),),
+                        child: Text('Route : ${sessionroutename.toString()=="null"?"":sessionroutename.toString()}',style: TextStyle(fontSize: 12),),
                       ),
                     ],
                   ),
@@ -91,7 +97,7 @@ class _ProfileviewState extends State<Profileview> {
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
               decoration: BoxDecoration(
-                color:  Colors.red,
+                color:  AppColors.logoutcolor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: TextButton(
@@ -114,6 +120,7 @@ Future getStringValuesSF() async {
   sessionname = prefs.getString('Name').toString();
   sessionid = prefs.getString('DriverID').toString();
   sessionrouteid = prefs.getString('RouteId').toString();
+  sessionroutename = prefs.getString('RouteName').toString();
   print(sessiontoken);
   setState(() {});
  }

@@ -66,10 +66,8 @@ class PostLocationState extends State<PostLocation> {
 
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
-    print(position.latitude);
-    print(position.longitude);
 
-    postlocation(position.latitude,position.latitude,sessiontoken);
+    postlocation(position.latitude,position.longitude,sessiontoken);
   }
 
   Future<void> determinepostion() async {

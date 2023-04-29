@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/completejourny/complete_model.dart';
@@ -53,7 +54,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 2,
-          title: Text('Home-Dashboard',style: TextStyle(color: Colors.black87,fontSize: 16),),
+          title: Text('Home - Dashboard',style: TextStyle(color: Colors.black87,fontSize: 16),),
           automaticallyImplyLeading: false,
           actions: [
             InkWell(onTap: (){
@@ -65,12 +66,12 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
           ],
         ),
         body: !loading?Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(left: 16,right: 16,top: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text('Hello,Welcome',style: TextStyle(fontSize: 12,color: Colors.black54),),
+              Text('Hello, Welcome',style: TextStyle(fontSize: 12,color: Colors.black54),),
               SizedBox(height: 5,),
               Text(sessionname,style: TextStyle(fontWeight: FontWeight.bold),),
               SizedBox(height: 5,),
@@ -85,7 +86,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                       borderRadius:BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.blueAccent),
                     ),
-                    child: Text('DriverID:${sessiondriverID}',style: TextStyle(fontSize: 12),),
+                    child: Text('Driver ID : ${sessiondriverID}',style: TextStyle(fontSize: 12),),
                   ),
                   Container(
                     margin: const EdgeInsets.all(5.0),
@@ -95,7 +96,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                       borderRadius:BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.green),
                     ),
-                    child: Text('Route No.:${sessionrouteid}',style: TextStyle(fontSize: 12),),
+                    child: Text('Route No. : ${sessionrouteid}',style: TextStyle(fontSize: 12),),
                   ),
                   Container(
                     margin: const EdgeInsets.all(5.0),
@@ -105,7 +106,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                       borderRadius:BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.brown),
                     ),
-                    child: Text('Date:${sessiondate}',style: TextStyle(fontSize: 12),),
+                    child: Text('Date : ${sessiondate}',style: TextStyle(fontSize: 12),),
                   ),
                 ],
               ),
@@ -140,7 +141,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                                   children: [
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 5),
-                                      child: Text(completemodel.data![index].name.toString()),
+                                      child: Text(completemodel.data![index].name.toString(),style: TextStyle(fontSize: 16,color: Colors.black54),),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -148,7 +149,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
                                           Icon(Icons.navigation,color: Colors.blue,size:14,),
-                                          Text('${completemodel.data![index].address.toString()},${completemodel.data![index].area.toString()}',style: TextStyle(fontSize: 10,color: Colors.black54),),
+                                          Text('${completemodel.data![index].address.toString()},${completemodel.data![index].area.toString()}',style: TextStyle(fontSize: 12,color: Colors.black54),),
                                         ],
                                       ),
                                     ),
@@ -164,7 +165,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                                       child: Row(
                                         children: [
                                           Icon(Icons.delete_outline_outlined,color: Colors.red,size:20,),
-                                          Text('Bin/Bag-',style: TextStyle(fontSize: 12,color: Colors.black54),),
+                                          Text('Bin/Bag - ',style: TextStyle(fontSize: 12,color: Colors.black54),),
                                           SizedBox(width: 3,),
                                           Text('${completemodel.data![index].wastageCount.toString()}',style: TextStyle(fontSize: 14,color: Colors.black87,fontWeight: FontWeight.bold),),
                                           Expanded(
@@ -312,13 +313,18 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
     setState(() {
       loading=true;
     });
-    await Geolocator.getCurrentPosition(
+    /*await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high)
         .then((Position position) {
       setState(() =>endjourney(position.latitude,position.longitude));
     }).catchError((e) {
       debugPrint(e);
-    });
+    });*/
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+
+    endjourney(position.latitude,position.longitude);
+
   }
   Future<void> endjourney(lat,lang) async {
 

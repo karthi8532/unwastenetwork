@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unwaste/appcolors.dart';
@@ -49,110 +51,119 @@ class _LoginPageState extends State<LoginPage> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,//const Color(0xffEEF1F3),
-        body: Column(
-          children: [
-            //const PageHeader(),
-            Container(
-              width: 100,
-              height: 100,
-              child: Image.asset('assets/images/logo.png'),
-            ),
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20),),
-                ),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: _loginFormKey,
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
+        body: Padding(
+          padding: const EdgeInsets.only(left:16,right: 16),
+          child: Column(
+            children: [
+              //const PageHeader(),
+
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20),),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: _loginFormKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset('assets/images/logo.png',height: 150,width: 150,),
+                            ],
+                          ),
                           const Text('Login',style: TextStyle(color: AppColors.primarynormal,fontSize: 16,fontWeight: FontWeight.bold),),
                           SizedBox(height: 10,),
-                          Text(AppConstants.LOGINDESC,style: TextStyle(color: Colors.black54),),
+                          Text(AppConstants.LOGINDESC,style: TextStyle(color: Colors.black54,fontSize: 14),),
                           SizedBox(height: 25,),
                           const Text('Mobile Number'),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10,top: 10,bottom: 10,),
-                            child: TextField(
-                              controller: edt_mobileno,
-                              obscureText: false,
-                              textAlign: TextAlign.start,
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w400,
-                                fontStyle: FontStyle.normal,
-                                fontSize: 14,
-                                color: Color(0xff000000),
+                          SizedBox(height: 6,),
+                          TextField(
+                            controller: edt_mobileno,
+                            obscureText: false,
+                            textAlign: TextAlign.start,
+                            maxLength: 10,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontStyle: FontStyle.normal,
+                              fontSize: 16,
+                              color: Color(0xff000000),
+                            ),
+                            decoration: InputDecoration(
+                              counterText: "",
+                              hintText: 'Enter Mobile Number',
+                              disabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(color: Colors.black26, width: 1),
                               ),
-                              decoration: InputDecoration(
-                                hintText: 'Enter Mobile Number',
-                                disabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: BorderSide(color: Colors.black26, width: 1),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: BorderSide(color: Colors.black87, width: 1),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: BorderSide(color: Colors.black26, width: 1),
-                                ),
-                                filled: true,
-                                fillColor: Color(0xffffffff),
-                                /*prefixIcon:
-                                Icon(Icons.person, color: Colors.black26, size: 24),*/
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(color: Colors.black87, width: 1),
                               ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(color: Colors.black26, width: 1),
+                              ),
+                              filled: true,
+                              fillColor: Color(0xffffffff),
+                              /*prefixIcon:
+                              Icon(Icons.person, color: Colors.black26, size: 24),*/
                             ),
                           ),
+                          SizedBox(height: 10,),
                           const Text('Password'),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10,top: 10,bottom: 10,),
-                            child: TextField(
-                              controller: edt_password,
-                              obscureText: true,
-                              textAlign: TextAlign.start,
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w400,
-                                fontStyle: FontStyle.normal,
-                                fontSize: 14,
-                                color: Color(0xff000000),
+                          SizedBox(height: 6,),
+                          TextField(
+                            controller: edt_password,
+                            obscureText: true,
+                            textAlign: TextAlign.start,
+                            maxLength: 15,
+                            maxLines: 1,
+                            toolbarOptions: ToolbarOptions(
+                                copy:false,
+                                paste: false,
+                                cut: false,
+                                selectAll: false
+                              //by default all are disabled 'false'
+                            ),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontStyle: FontStyle.normal,
+                              fontSize: 16,
+                              color: Color(0xff000000),
+                            ),
+                            decoration: InputDecoration(
+                              counterText: "",
+                              hintText: 'Enter Password',
+                              disabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(color: Colors.black26, width: 1),
                               ),
-                              decoration: InputDecoration(
-                                hintText: 'Enter Password',
-                                disabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: BorderSide(color: Colors.black26, width: 1),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: BorderSide(color: Colors.black87, width: 1),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: BorderSide(color: Colors.black26, width: 1),
-                                ),
-                                filled: true,
-                                fillColor: Color(0xffffffff),
-                                /*prefixIcon:
-                                Icon(Icons.password, color: Colors.black26, size: 24),*/
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(color: Colors.black87, width: 1),
                               ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(color: Colors.black26, width: 1),
+                              ),
+                              filled: true,
+                              fillColor: Color(0xffffffff),
+                              /*prefixIcon:
+                              Icon(Icons.password, color: Colors.black26, size: 24),*/
                             ),
                           ),
-
                           const SizedBox(height: 16,),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10,top: 10,bottom: 10,),
-                            child: Center(
-                                child: !loading?CustomFormButton(innerText: 'Login', onPressed: _handleLoginUser,):Center(child: CircularProgressIndicator(),)),
-                          ),
+                          Center(
+                              child: !loading?CustomFormButton(innerText: 'Login', onPressed: _handleLoginUser,):Center(child: CircularProgressIndicator(),)),
                           const SizedBox(height: 18,),
                         ],
                       ),
@@ -160,8 +171,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -261,8 +272,14 @@ class _LoginPageState extends State<LoginPage> {
           prefs.setString("DriverID", loginModel.data!.driverId.toString());
           prefs.setString("RouteId", loginModel.data!.routeId.toString());
           prefs.setString("WastageID", loginModel.data!.wastageId.toString());
-          prefs.setString("Date", loginModel.data!.createdAt.toString().substring(0,10));
+          var inputFormat = DateFormat('yyyy-MM-dd');
+          var inputDate = inputFormat.parse(loginModel.data!.createdAt.toString().substring(0,10));
+
+          var outputFormat = DateFormat('dd-MM-yyyy');
+          var outputDate = outputFormat.format(inputDate);
+          prefs.setString("Date", outputDate);
           prefs.setStringList("TypeList", loginModel.data!.weightUnits!.toList());
+
           prefs.setBool("LoggedIn", true);
 
           Navigator.pushReplacement(

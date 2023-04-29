@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -35,6 +36,7 @@ class _DashboardpageState extends State<Dashboardpage> {
 
   bool loading=false;
   late int postionselect=0;
+  var clickapartmentid="";
   String cdate = DateFormat("yyyy-MM-dd").format(DateTime.now());
   bool startjourny=false;
 
@@ -70,18 +72,18 @@ class _DashboardpageState extends State<Dashboardpage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,
-        title: Text('Home-Dashboard',style: TextStyle(color: Colors.black87,fontSize: 16),),
+        title: Text('Home - Dashboard',style: TextStyle(color: Colors.black87,fontSize: 16),),
         actions: [
           InkWell(onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context)=>Profileview()));
-          }, child: Padding(
+          },child: Padding(
             padding: const EdgeInsets.only(right: 15),
             child: Image.asset('assets/images/avatarmale.png',height: 40,width: 40,),
-          ))
+          )),
         ],
       ),
         body:!loading? Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(left: 16,right: 16,top: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
@@ -100,7 +102,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                       borderRadius:BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: AppColors.kdashblue),
                   ),
-                  child: Text('DriverID:${sessionid.toString()}',style: TextStyle(fontSize: 12),),
+                  child: Text('Driver ID : ${sessionid.toString()}',style: TextStyle(fontSize: 12),),
                 ),
                 Container(
                   margin: const EdgeInsets.all(5.0),
@@ -110,7 +112,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                     borderRadius:BorderRadius.all(Radius.circular(5)),
                     border: Border.all(color: Colors.green),
                   ),
-                  child: Text('Route No.:${sessionroutemasterid}',style: TextStyle(fontSize: 12),),
+                  child: dashboardModel.data!.length>0?Text('Route : ${dashboardModel.data![postionselect].routeMasterName}',style: TextStyle(fontSize: 12),):Text('Route : ${sessionroutemasterid}',style: TextStyle(fontSize: 12),),
                 ),
                 Container(
                   margin: const EdgeInsets.all(5.0),
@@ -120,7 +122,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                     borderRadius:BorderRadius.all(Radius.circular(5)),
                     border: Border.all(color: AppColors.kdashbrown),
                   ),
-                  child: Text('Date:${sessiondate}',style: TextStyle(fontSize: 12,color: Colors.brown),),
+                  child: Text('Date : ${sessiondate}',style: TextStyle(fontSize: 12,color: Colors.brown),),
                 ),
               ],
               ),
@@ -131,7 +133,15 @@ class _DashboardpageState extends State<Dashboardpage> {
                 thickness: 0.8,
               ),
               SizedBox(height: 10,),
-              Text('List of Appartments',style: TextStyle(fontSize: 16),),
+              Row(
+                children: [
+                  Expanded(child: Text('List of Apartments',style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),)),
+                  TextButton.icon(onPressed: (){
+                    getstartjournysinglelist();
+                  }, icon: Icon(Icons.refresh,color: Colors.white), label: Text('Refresh',style: TextStyle(color: Colors.white))
+                    ,style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Color(0xFF192C49)),maximumSize: MaterialStatePropertyAll(Size(120,36))),)
+                ],
+              ),
               SizedBox(height: 25,),
               Expanded(
                 child: Container(
@@ -140,17 +150,18 @@ class _DashboardpageState extends State<Dashboardpage> {
                     padding: const EdgeInsets.all(13.0),
                     child: dashboardModel.data!.length>0?
                     ListView.builder(
-                        itemCount: dashboardModel.data!.length,
+                        itemCount: 1,
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: (){
                               setState(() {
                                 print('select');
                                 postionselect=index;
+                                print(postionselect);
                               });
                             },
-                            child: Card(
-                              color: postionselect==index?Colors.lightBlue.shade200 :Colors.white,
+                            child:dashboardModel.data![postionselect].apartment!.isNotEmpty? Card(
+                              color: postionselect==index?Colors.white :Colors.white,
                               child: Row(
                                 children: [
                                   Expanded(child: Container(
@@ -164,7 +175,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.symmetric(vertical: 5),
-                                        child: Text(dashboardModel.data![postionselect].apartment![index].name.toString()),
+                                        child: Text(dashboardModel.data![postionselect].apartment![index].name.toString(),style: TextStyle(fontSize: 16),),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(vertical: 5),
@@ -173,7 +184,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                                           children: [
                                             Image.asset('assets/images/iconnavigate.png',color: AppColors.kdashblue,height: 18,width: 18,),
                                             SizedBox(width: 5,),
-                                            Text('${dashboardModel.data![postionselect].apartment![index].address.toString()},${dashboardModel.data![postionselect].apartment![index].area.toString()}',style: TextStyle(fontSize: 10,color: Colors.black54),),
+                                            Text('${dashboardModel.data![postionselect].apartment![index].address.toString()},${dashboardModel.data![postionselect].apartment![index].area.toString()}',style: TextStyle(fontSize: 12,color: Colors.black54),),
                                           ],
                                         ),
                                       ),
@@ -190,7 +201,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                                           children: [
                                             Image.asset('assets/images/iconbinbag.png',width: 20,height: 20,),
                                             SizedBox(width: 5,),
-                                            Text('Bin/Bag-',style: TextStyle(fontSize: 12,color: Colors.black54),),
+                                            Text('Bin/Bag - ',style: TextStyle(fontSize: 12,color: Colors.black54),),
                                             Text('0',style: TextStyle(fontSize: 14,color: Colors.black87,fontWeight: FontWeight.bold),),
                                           ],
                                         ),
@@ -199,7 +210,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                                   ),flex: 8,),
                                 ],
                               ),
-                            ),
+                            ):Container(child: Center(child: Text('NoData'),)),
                           );
                         }):Center(child: Text('No Data!'),),
                   ),
@@ -219,12 +230,18 @@ class _DashboardpageState extends State<Dashboardpage> {
                   )
               )
         ),
-            onPressed: () async {
+            onPressed: dashboardModel.data!.length==0?null:() async {
             /*  if (dashboardModel.data!.length == 0) {
                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Data should not empty!')),);
               } else {*/
-
-                _getCurrentPosition();
+                  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+                  final SharedPreferences prefs = await _prefs;
+                  prefs.setString("RouteId", dashboardModel.data![postionselect].routeMasterId.toString());
+                  //prefs.setString("RouteId", dashboardModel.data![postionselect].routeMasterId.toString());
+                  prefs.setString("VehicleId", dashboardModel.data![postionselect].vehicleId.toString());
+                  prefs.setString("JournyEndId", dashboardModel.data![postionselect].id.toString());
+                  prefs.setString("RouteName", dashboardModel.data![postionselect].routeMasterName.toString());
+                 _getCurrentPosition();
               //}
             },
             child: const SizedBox(
@@ -420,13 +437,17 @@ class _DashboardpageState extends State<Dashboardpage> {
     setState(() {
       loading=true;
     });
-    await Geolocator.getCurrentPosition(
+    /*await Geolocator.getCurrentPosition(
     desiredAccuracy: LocationAccuracy.high)
         .then((Position position) {
     setState(() =>journystart(position.latitude,position.longitude));
     }).catchError((e) {
     debugPrint(e);
-    });
+    });*/
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+
+    journystart(position.latitude,position.longitude);
   }
   Future<void> journystart(lat,lang) async {
     setState(() {
@@ -436,13 +457,14 @@ class _DashboardpageState extends State<Dashboardpage> {
 
     var body = {
       "date":AppConstants.cdate,
-      "route_id":dashboardModel.data![0].routeMasterId.toString(),
-      "driver_id":dashboardModel.data![0].driverId.toString(),
-      "start_apartment_id":1,
+      "route_id":dashboardModel.data![postionselect].routeMasterId.toString(),
+      "driver_id":dashboardModel.data![postionselect].driverId.toString(),
+      "start_apartment_id":dashboardModel.data![postionselect].apartment![postionselect].id.toString(),
       "lat":lat,
       "lng":lang,
-      "vehicle_id":dashboardModel.data![0].vehicleId.toString(),
+      "vehicle_id":dashboardModel.data![postionselect].vehicleId.toString(),
     };
+    print(jsonEncode(body));
     try {
       final response = await http.post(
           Uri.parse(AppConstants.LIVE_URL + 'api/journey-log/create'),

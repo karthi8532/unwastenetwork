@@ -11,6 +11,7 @@ class AppColors {
   static const ktextcolor = Color(0xFF192C49BF);
   static const kdashblue = Color(0xFF3D8BF2);
   static const kdashbrown = Color(0xBFBE541C);
+  static const logoutcolor = Color(0xFFC31C1C);
 
   static const  backgroundColor = Color(0xFFFFFFFF);
 

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -72,7 +73,7 @@ class _ApartmentViewState extends State<ApartmentView> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text('Apartmentview',style: TextStyle(color: Colors.black87,fontSize: 16),),
+        title: Text('Apartment View',style: TextStyle(color: Colors.black87,fontSize: 18),),
         leading: InkWell(
           onTap: (){
             Navigator.pop(context);
@@ -80,207 +81,210 @@ class _ApartmentViewState extends State<ApartmentView> {
             child: Icon(Icons.arrow_back,color: Colors.black87,)),
       ),
       body: !loading?SingleChildScrollView(
-        child: Column(
-          children: [
-            Card(
-              // Define the shape of the card
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-              // Define how the card's content should be clipped
-              clipBehavior: Clip.antiAliasWithSaveLayer,
-              // Define the child widget of the card
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children:[
-                  // Add padding around the row widget
-                  Padding(
-                    padding: const EdgeInsets.all(15),
-                    child:model.data![0].apartment!.isNotEmpty? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Add an image widget to display an image
-                        Image.asset('assets/images/apartmentview1.png',
-                          height:200,
-                          width: MediaQuery.of(context).size.width,
-                          fit: BoxFit.cover,
-                        ),
-                        // Add some spacing between the image and the text
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(model.data![0].apartment![0].name.toString()=="null"?"-":model.data![0].apartment![0].name.toString(),style: TextStyle(fontWeight: FontWeight.bold),),
-                        SizedBox(
-                          height: 5,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Image.asset('assets/images/iconnavigate.png',color: AppColors.kdashblue,height: 18,width: 18,),
-                              SizedBox(width: 5,),
-                              Text('${model.data![0].apartment![0].area.toString()==null?"-":model.data![0].apartment![0].area.toString()},${model.data![0].apartment![0].address.toString()=="null"?"-":model.data![0].apartment![0].address.toString()}',style: TextStyle(fontSize: 10),),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ):Center(child: Text('No Data!')),
-                  ),
-                ],
-              )//:Center(child: Text('No data'),),
-            ),
-            SizedBox(height: 10,),
-            Container(
-              width: MediaQuery.of(context).size.width *0.9,
-              height: 45,
-              child: ElevatedButton.icon(onPressed: ()=> openMapsSheet(context),/*navigateTo(double.parse(widget.modell.data![0].lat.toString()),double.parse(widget.modell.data![0].lng.toString())),*/ icon: Icon(Icons.location_on,color: Colors.white,),label: Text('Navigate'),style: ElevatedButton.styleFrom(
-                  primary: Colors.blueAccent //elevated btton background color
-              ),),
-            ),
-            SizedBox(height: 10,),
-            model.data![0].apartment!.isNotEmpty?Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              height: 45,
-              child: ElevatedButton.icon(onPressed: () {
-                  scan();
-                  }, icon: Icon(Icons.qr_code,color: Colors.white,),label: Text('Scan QR'),style: ElevatedButton.styleFrom(
-                  primary: Colors.black87 //elevated btton background color
-              ),),
-            ):Container(),
-            SizedBox(height: 10,),
-            model.data![0].apartment!.isNotEmpty?
-            Text(model.data![0].apartment![0].name.toString().isEmpty?"-":model.data![0].apartment![0].name.toString(),style: TextStyle(fontSize: 16),):Text(''),
-            SizedBox(
-              height: 10,
-            ),
-            Text('Bin/Bag Count'),
-            SizedBox(
-              height: 15,
-            ),
-            Center(
-              /*child: Container(
-                width: 100,
-                padding: EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: Theme.of(context).accentColor),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    InkWell(
-                        onTap: () {},
-                        child: Icon(
-                          Icons.remove,
-                          color: Colors.white,
-                          size: 16,
-                        )),
-                    Container(
-                      margin: EdgeInsets.symmetric(horizontal: 3),
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 3, vertical: 2),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
-                          color: Colors.white),
-                      child: Text(
-                        '0',
-                        style: TextStyle(color: Colors.black, fontSize: 20,fontWeight: FontWeight.normal),
-                      ),
-                    ),
-                    InkWell(
-                        onTap: () {},
-                        child: Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 16,
-                        )),
-                  ],
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16,right: 16,top: 10),
+          child: Column(
+            children: [
+              Card(
+                // Define the shape of the card
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
                 ),
-              ),*/
-              child:Visibility(
-                visible: qtycon,
-                child: Container(
-                  padding: EdgeInsets.all(8),
-                  width: 150,
+                // Define how the card's content should be clipped
+                clipBehavior: Clip.antiAliasWithSaveLayer,
+                // Define the child widget of the card
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children:[
+                    // Add padding around the row widget
+                    Padding(
+                      padding: const EdgeInsets.all(15),
+                      child:model.data![0].apartment!.isNotEmpty? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Add an image widget to display an image
+                          Image.asset('assets/images/apartmentview1.png',
+                            height:200,
+                            width: MediaQuery.of(context).size.width,
+                            fit: BoxFit.cover,
+                          ),
+                          // Add some spacing between the image and the text
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text(model.data![0].apartment![0].name.toString()=="null"?"-":model.data![0].apartment![0].name.toString(),style: TextStyle(fontWeight: FontWeight.bold,fontSize: 14),),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Image.asset('assets/images/iconnavigate.png',color: AppColors.kdashblue,height: 18,width: 18,),
+                                SizedBox(width: 5,),
+                                Text('${model.data![0].apartment![0].area.toString()==null?"-":model.data![0].apartment![0].area.toString()},${model.data![0].apartment![0].address.toString()=="null"?"-":model.data![0].apartment![0].address.toString()}',style: TextStyle(fontSize: 10),),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ):Center(child: Text('No Data!')),
+                    ),
+                  ],
+                )//:Center(child: Text('No data'),),
+              ),
+              SizedBox(height: 10,),
+              Container(
+                width: MediaQuery.of(context).size.width *0.9,
+                height: 45,
+                child: ElevatedButton.icon(onPressed: ()=> openMapsSheet(context),/*navigateTo(double.parse(widget.modell.data![0].lat.toString()),double.parse(widget.modell.data![0].lng.toString())),*/ icon: Icon(Icons.location_on,color: Colors.white,),label: Text('Navigate'),style: ElevatedButton.styleFrom(
+                    primary: Colors.blueAccent //elevated btton background color
+                ),),
+              ),
+              SizedBox(height: 10,),
+              model.data![0].apartment!.isNotEmpty?Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: 45,
+                child: ElevatedButton.icon(onPressed: () {
+                    scan();
+                    }, icon: Icon(Icons.qr_code,color: Colors.white,),label: Text('Scan QR'),style: ElevatedButton.styleFrom(
+                    primary: Colors.black87 //elevated btton background color
+                ),),
+              ):Container(),
+              SizedBox(height: 10,),
+              model.data![0].apartment!.isNotEmpty?
+              Text(model.data![0].apartment![0].name.toString().isEmpty?"-":model.data![0].apartment![0].name.toString(),style: TextStyle(fontSize: 16),):Text(''),
+              SizedBox(
+                height: 10,
+              ),
+              Text('Bin/Bag Count'),
+              SizedBox(
+                height: 15,
+              ),
+              Center(
+                /*child: Container(
+                  width: 100,
+                  padding: EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.lightBlue)),
+                      borderRadius: BorderRadius.circular(5),
+                      color: Theme.of(context).accentColor),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       InkWell(
-                        onTap: (){
-                          decrement();
-                        },
-                        child: const Icon(
-                          Icons.remove,
-                          size: 18,
-                          color: AppColors.lightBlue,
-                        ),
-                      ),
-                      Text(
-                        qty.toString(),
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: AppColors.lightBlue,
+                          onTap: () {},
+                          child: Icon(
+                            Icons.remove,
+                            color: Colors.white,
+                            size: 16,
+                          )),
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 3),
+                        padding:
+                        EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(3),
+                            color: Colors.white),
+                        child: Text(
+                          '0',
+                          style: TextStyle(color: Colors.black, fontSize: 20,fontWeight: FontWeight.normal),
                         ),
                       ),
                       InkWell(
-                        onTap: (){
-                          increment();
-                        },
-                        child: Icon(
-                          Icons.add,
-                          size: 18,
-                          color: AppColors.lightBlue,
-                        ),
-                      ),
+                          onTap: () {},
+                          child: Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 16,
+                          )),
                     ],
+                  ),
+                ),*/
+                child:Visibility(
+                  visible: qtycon,
+                  child: Container(
+                    padding: EdgeInsets.all(8),
+                    width: 150,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.lightBlue)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        InkWell(
+                          onTap: (){
+                            decrement();
+                          },
+                          child: const Icon(
+                            Icons.remove,
+                            size: 18,
+                            color: AppColors.lightBlue,
+                          ),
+                        ),
+                        Text(
+                          qty.toString(),
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: AppColors.lightBlue,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: (){
+                            increment();
+                          },
+                          child: Icon(
+                            Icons.add,
+                            size: 18,
+                            color: AppColors.lightBlue,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            !loading?Container(
-              //width: size.width * 0.8,
+              SizedBox(
+                height: 15,
+              ),
+              !loading?Container(
+                //width: size.width * 0.8,
+                  width: size.width * 0.9,
+                  decoration: BoxDecoration(
+                    color: const Color(0xDD000000),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: model.data![0].apartment!.isNotEmpty?TextButton(
+                    onPressed: (){
+                      //Navigator.push(context, MaterialPageRoute(builder: (context)=>const CompleteJournyPage()));
+                      if(qty==0){
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please Enter Qty..')),);
+                      }else {
+                        submitwastage();
+                      }
+                    },
+                    child: Text('Save', style: const TextStyle(color: Colors.white, fontSize: 20),),
+                  ):Container()
+              ):Center(child: CircularProgressIndicator(),),
+              SizedBox(
+                height: 15,
+              ),
+             /* !loading?Container(
+                //width: size.width * 0.8,
                 width: size.width * 0.9,
                 decoration: BoxDecoration(
                   color: const Color(0xDD000000),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: model.data![0].apartment!.isNotEmpty?TextButton(
+                child: TextButton(
                   onPressed: (){
                     //Navigator.push(context, MaterialPageRoute(builder: (context)=>const CompleteJournyPage()));
-                    if(qty==0){
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please Enter Qty..')),);
-                    }else {
-                      submitwastage();
-                    }
+                    submitwastage();
                   },
-                  child: Text('Save', style: const TextStyle(color: Colors.white, fontSize: 20),),
-                ):Container()
-            ):Center(child: CircularProgressIndicator(),),
-            SizedBox(
-              height: 15,
-            ),
-           /* !loading?Container(
-              //width: size.width * 0.8,
-              width: size.width * 0.9,
-              decoration: BoxDecoration(
-                color: const Color(0xDD000000),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextButton(
-                onPressed: (){
-                  //Navigator.push(context, MaterialPageRoute(builder: (context)=>const CompleteJournyPage()));
-                  submitwastage();
-                },
-                child: Text('Submit', style: const TextStyle(color: Colors.white, fontSize: 20),),
-              )
-            ):Center(child: CircularProgressIndicator(),),*/
-          ],
+                  child: Text('Submit', style: const TextStyle(color: Colors.white, fontSize: 20),),
+                )
+              ):Center(child: CircularProgressIndicator(),),*/
+            ],
+          ),
         ),
 
       ):Center(child: CircularProgressIndicator(),),
@@ -389,7 +393,7 @@ class _ApartmentViewState extends State<ApartmentView> {
     var body = {
 
       "date":AppConstants.cdate,
-      "route_id":"1",
+      "route_id":sessionrouteid,
       "driver_id":sessiondriverID
     };
     try {
@@ -424,96 +428,15 @@ class _ApartmentViewState extends State<ApartmentView> {
           model=ApartmentModel.fromJson(jsonDecode(response.body));
           totalapartmentcount=int.parse(model.data![0].totalApartmentCount.toString());
           currentapartmentcount=int.parse(model.data![0].wastageLogAddedApartmentCount.toString());
-          print('PRINT${model.data![0].apartment![0].name.toString()=="null"?"-":""}');
+          //print('PRINT${model.data![0].apartment![0].name.toString()=="null"?"-":""}');
 
-          if(totalapartmentcount-currentapartmentcount<0){
+          if(totalapartmentcount==currentapartmentcount){
             print('COUNT COMPLETE${totalapartmentcount-currentapartmentcount}');
-            Navigator.push(context, MaterialPageRoute(builder: (context) =>
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>
                 CompleteJournyPage()));
           }
 
 
-        }
-      } else {
-        showDialog(
-          barrierColor: Colors.black26,
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            return CustomDialogSingle(
-              title: "Failed",
-              description: '${jsonDecode(response.body)['message']}',
-            );
-          },
-        );
-        // logoutfunction(context);
-      }
-    } on SocketException {
-      setState(() {
-        loading = false;
-        showDialog(
-            context: this.context,
-            builder: (_) => AlertDialog(
-                backgroundColor: Colors.black,
-                title: Text(
-                  "No Response!..",
-                  style: TextStyle(color: Colors.purple),
-                ),
-                content: Text(
-                  "Slow Server Response or Internet connection",
-                  style: TextStyle(color: Colors.white),
-                )));
-      });
-      throw Exception('Internet is down');
-    }
-  }
-
-  Future<void> endjourney() async {
-
-    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken'};
-    var body = {
-
-      "date":"2",
-      "route_id":sessiontoken,
-      "driver_id":sessiondriverID,
-      "start_apartment_id":"3",
-      "lat":"2",
-      "lng":"2",
-      "vehicle_id":qty
-    };
-    setState(() {
-      loading = true;
-    });
-    try {
-      final response = await http.post(
-          Uri.parse(AppConstants.LIVE_URL + 'api/journey-log/create'),
-          body: jsonEncode(body),
-          headers: headers);
-      print(jsonEncode(body));
-      print(headers);
-      setState(() {
-        loading = false;
-      });
-      print('REPOSD  ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
-          showDialog(
-            barrierColor: Colors.black26,
-            context: context,
-            barrierDismissible: false,
-            builder: (context) {
-              return CustomDialogSingle(
-                title: "Failed",
-                description: '${jsonDecode(response.body)['message']}',
-              );
-            },
-          );
-        } else {
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(bottom: 100.0),
-            content: Text('${jsonDecode(response.body)['message']}'),
-          );
         }
       } else {
         showDialog(
@@ -652,102 +575,7 @@ class _ApartmentViewState extends State<ApartmentView> {
       throw Exception('Internet is down');
     }
   }
-  Future<void> _getCurrentPosition() async {
-    setState(() {
-      loading=true;
-    });
-    await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high)
-        .then((Position position) {
-      setState(() =>journyclose(position.latitude,position.longitude));
-    }).catchError((e) {
-      debugPrint(e);
-    });
-  }
-  Future<void> journyclose(lat,lang) async {
-    setState(() {
-      loading=true;
-    });
-    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
 
-    var body = {
-      "date":AppConstants.cdate,
-      "route_id":sessionrouteid,
-      "driver_id":sessiondriverID,
-      "start_apartment_id":model.data![0].apartment![0].id,
-      "lat":lat,
-      "lng":lang,
-      "vehicle_id":1,
-    };
-    try {
-      final response = await http.post(
-          Uri.parse(AppConstants.LIVE_URL + 'api/wastage-log/edit'),
-          body: jsonEncode(body),
-          headers: headers);
-      print(jsonEncode(body));
-
-      print('REPOSD  ${jsonDecode(response.body)['status']}');
-
-      setState(() {
-        loading = false;
-      });
-      if (response.statusCode == 200) {
-        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
-          showDialog(
-            barrierColor: Colors.black26,
-            context: context,
-            barrierDismissible: false,
-            builder: (context) {
-              return CustomDialogSingle(
-                title: "Failed",
-                description: '${jsonDecode(response.body)['message']}',
-              );
-            },
-          );
-        } else {
-          Navigator.push(context, MaterialPageRoute(builder: (context) =>
-              CompleteJournyPage()));
-        }
-      } else {
-        showDialog(
-          barrierColor: Colors.black26,
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            return CustomDialogSingle(
-              title: "Failed",
-              description: "Failed to Connect Login Api",
-            );
-          },
-        );
-      }
-    } on SocketException {
-      setState(() {
-        loading = false;
-        showDialog(
-            context: this.context,
-            builder: (_) => AlertDialog(
-                backgroundColor: Colors.black,
-                title: Text(
-                  "No Response!..",
-                  style: TextStyle(color: Colors.purple),
-                ),
-                content: Text(
-                  "Slow Server Response or Internet connection",
-                  style: TextStyle(color: Colors.white),
-                )));
-      });
-      throw Exception('Internet is down');
-    }
-  }
-  static void navigateTo(double lat, double lng) async {
-    var uri = Uri.parse("google.navigation:q=$lat,$lng&mode=d");
-    if (await canLaunch(uri.toString())) {
-      await launch(uri.toString());
-    } else {
-      throw 'Could not launch ${uri.toString()}';
-    }
-  }
   openMapsSheet(context) async {
     try {
       final coords = Coords(double.parse(model.data![0].apartment![0].lat.toString().toString()), double.parse(model.data![0].apartment![0].lng.toString().toString()));

@@ -32,19 +32,17 @@ class _SplashScreenState extends State<SplashScreen> {
                     ? LoginScreen()
                     : DashboardScreen())));*/
     var assetsImage = AssetImage(
-        'assets/images/splash.png',); //<- Creates an object that fetches an image.
+        'assets/images/splash1.png',); //<- Creates an object that fetches an image.
     var image = Image(
         image: assetsImage,
         height: MediaQuery.of(context)
             .size
             .height,); //<- Creates a widget that displays an image.
-    return  Scaffold(
-        body: Container(
+    return   Container(
+            width:MediaQuery.of(context).size.width,
+            height:MediaQuery.of(context).size.height,
           decoration: new BoxDecoration(color: Colors.white),
-          child: Center(
-            child: image,
-          ),
-        ), //<- place where the image appears
+          child: Image.asset("assets/images/splash/splash1.jpg"),//<- place where the image appears
     );
   }
   getStringValuesSF() async {

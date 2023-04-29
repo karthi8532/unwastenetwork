@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +35,8 @@ class _UploadScreenState extends State<UploadScreen> {
   String sessionmobile="";
   String sessiontoken="";
   String sessiondriverID="";
+  String sessionvehicleid="";
+  String sessionjournylogendid="";
   String sessionname="";
   String sessionrouteid="";
   String sessionwastageid="";
@@ -48,11 +51,13 @@ class _UploadScreenState extends State<UploadScreen> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return SafeArea(child: Scaffold(
+    return SafeArea(
+      child: Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text('Upload Garbage-Weight',style: TextStyle(color: Colors.black87,fontSize: 16),),
+        elevation:2,
+        title: Text('Upload Garbage Weight',style: TextStyle(color: Colors.black87,fontSize: 16),),
         leading: Icon(Icons.arrow_back,color: Colors.black87,),
       ),
       body: SingleChildScrollView(
@@ -62,7 +67,7 @@ class _UploadScreenState extends State<UploadScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: EdgeInsets.all(10),
+                padding: EdgeInsets.only(left: 16,right: 16,top: 20),
                 child: Card(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -131,7 +136,10 @@ class _UploadScreenState extends State<UploadScreen> {
                                     items: typelist.map<DropdownMenuItem<String>>((String value) {
                                       return DropdownMenuItem<String>(
                                         value: value,
-                                        child: Text(value),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 20),
+                                          child: Text(value),
+                                        ),
                                       );
                                     }).toList(),
                                   ),
@@ -159,6 +167,44 @@ class _UploadScreenState extends State<UploadScreen> {
                   ),
                 ),
               ),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (int i = 0; i < filelist.length; i++)
+                      Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Image.file(filelist[i]);
+                                },
+                              );
+                            },
+                            child: Container(
+                                height: 100,
+                                width: 100,
+                                child: Image.file(filelist[i])),
+                          ),
+                          InkWell(
+                            child: Icon(
+                              Icons.cancel,color: Colors.red,),
+                            onTap: () {
+                              setState(() {
+                                filelist.removeAt(i);
+                                files.removeAt(i);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 5,),
               Center(
                 child:!loading? Container(
                   //width: size.width * 0.8,
@@ -208,11 +254,11 @@ class _UploadScreenState extends State<UploadScreen> {
                 children: [
                   Image.asset('assets/images/thankyouimage.png'),
                   SizedBox(height: 10,),
-                  Text("Thank you!!",style:TextStyle(fontSize: 20),),
+                  Text("Thank you!!!",style:TextStyle(fontSize: 20),),
                   SizedBox(height: 10,),
-                  Text("Your Daily task hasbeen Completed. ",style:TextStyle(fontSize: 14),),
+                  Text("Your Daily task has been Completed.",style:TextStyle(fontSize: 14),),
                   SizedBox(height: 5,),
-                  Text("Have a nice day!. ",style:TextStyle(fontSize: 12),),
+                  Text("Have a Nice day!. ",style:TextStyle(fontSize: 12),),
                   SizedBox(height: 5,),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -229,7 +275,9 @@ class _UploadScreenState extends State<UploadScreen> {
         });
   }
   attachFile() async{
-
+    files.clear();
+    filelist.clear();
+    attachmentlist.clear();
     final picker = ImagePicker();
     final pickedFile =
     await picker.getImage(
@@ -243,7 +291,6 @@ class _UploadScreenState extends State<UploadScreen> {
             .toString()
             .split("/")
             .last);
-
         files.add(pickedFile.path);
         print(files.length);
 
@@ -260,6 +307,8 @@ class _UploadScreenState extends State<UploadScreen> {
     sessionname = prefs.getString('Name').toString();
     sessionrouteid = prefs.getString('RouteId').toString();
     sessionwastageid = prefs.getString('WastageID').toString();
+    sessionvehicleid = prefs.getString('VehicleId').toString();
+    sessionjournylogendid = prefs.getString('JournyEndId').toString();
     print(sessiontoken);
     typelist = prefs.getStringList("TypeList") ?? [];
     print(typelist.length);_selectedtype=typelist.first;
@@ -360,13 +409,17 @@ class _UploadScreenState extends State<UploadScreen> {
     setState(() {
       loading=true;
     });
-    await Geolocator.getCurrentPosition(
+    /*await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high)
         .then((Position position) {
       setState(() =>endjourney(position.latitude,position.longitude,openlogid));
     }).catchError((e) {
       debugPrint(e);
-    });
+    });*/
+
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    endjourney(position.latitude,position.longitude,openlogid);
   }
   Future<void> endjourney(lat,lang,openlogid) async {
 
@@ -377,18 +430,21 @@ class _UploadScreenState extends State<UploadScreen> {
       "date":AppConstants.cdate,
       "route_id":sessionrouteid,
       "driver_id":sessiondriverID,
-      "end_apartment_id":"3",
+      "end_apartment_id":"0",
       "end_lat":lat,
       "end_lng":lang,
       "photo":attachmentlist[0],
-      "remarks":"2",
+      "remarks":"-",
       "journey_enddate":AppConstants.cdatetime,
       "journey_status":"1",
-      "vehicle_id":"1",
+      "vehicle_id":sessionvehicleid,
       "wastage_weight":weightController.text,
       "wastage_measurement":_selectedtype.toString().isEmpty?"-":_selectedtype.toString(),
+      "route_assign_id":sessionjournylogendid.toString()
 
     };
+    print(jsonEncode(body));
+
     setState(() {
       loading = true;
     });

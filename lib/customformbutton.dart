@@ -10,8 +10,8 @@ class CustomFormButton extends StatelessWidget {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Container(
-      //width: size.width * 0.8,
-      width: size.width * 1,
+      //padding: EdgeInsets.only(left: 16,right: 16),
+      width: size.width,
       decoration: BoxDecoration(
         color: const Color(0xDD000000),
         borderRadius: BorderRadius.circular(10),
