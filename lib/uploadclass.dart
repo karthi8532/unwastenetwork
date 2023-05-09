@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unwaste/completejourny/unitmatsermodel.dart';
 import 'package:unwaste/dashboard/dashboard.dart';
+import 'package:custom_searchable_dropdown/custom_searchable_dropdown.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 import 'CustomSingleDialog.dart';
@@ -31,16 +33,21 @@ class _UploadScreenState extends State<UploadScreen> {
   List<File> filelist = [];
   bool loading=false;
   String openlogid="";
-  late String _selectedtype;
+  String selectedtype="";
   String sessionmobile="";
   String sessiontoken="";
   String sessiondriverID="";
   String sessionvehicleid="";
   String sessionjournylogendid="";
+
   String sessionname="";
   String sessionrouteid="";
   String sessionwastageid="";
-  List<String> typelist=[];
+  String selecttypeid="";
+
+  //List<Data> typelist=[];
+  List<Result> typelist = [];
+  late unitmastermodel unitmodel;
   TextEditingController weightController=TextEditingController();
   @override
   void initState() {
@@ -80,13 +87,14 @@ class _UploadScreenState extends State<UploadScreen> {
                         Row(
                           children: [
                             Expanded(
-                              flex: 5,
+                              flex: 4,
                               child: TextField(
                               controller: weightController,
                               keyboardType: TextInputType.number,
                               obscureText: false,
                               textAlign: TextAlign.start,
                               maxLines: 1,
+                              maxLength: 10,
                               style: TextStyle(
                                 fontWeight: FontWeight.w400,
                                 fontStyle: FontStyle.normal,
@@ -95,16 +103,17 @@ class _UploadScreenState extends State<UploadScreen> {
 
                               ),
                               decoration: InputDecoration(
+                                counterText: "",
                                 disabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
+                                  borderRadius: BorderRadius.circular(0.0),
                                   borderSide: BorderSide(color: Colors.black26, width: 1),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
+                                  borderRadius: BorderRadius.circular(0.0),
                                   borderSide: BorderSide(color: Colors.black87, width: 1),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
+                                  borderRadius: BorderRadius.circular(0.0),
                                   borderSide: BorderSide(color: Colors.black26, width: 1),
                                 ),
                                 filled: true,
@@ -113,36 +122,39 @@ class _UploadScreenState extends State<UploadScreen> {
                             ),),
                             SizedBox(width: 20,),
                             Expanded(
-                              flex: 5,
+                              flex: 6,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
-                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.all(Radius.circular(15)),
                                 ),
                                 margin: EdgeInsets.all(5.0),
                                 padding: EdgeInsets.all(5.0),
                                // width: MediaQuery.of(context).size.width * 0.30,
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedtype,
-                                    icon: const Icon(Icons.arrow_drop_down_circle_outlined),
-                                    elevation: 16,
-                                    onChanged: (String? value) {
-                                      // This is called when the user selects an item.
-                                      setState(() {
-                                        _selectedtype = value!;
-                                      });
-                                    },
-                                    items: typelist.map<DropdownMenuItem<String>>((String value) {
-                                      return DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(left: 20),
-                                          child: Text(value),
-                                        ),
-                                      );
-                                    }).toList(),
+                                child: CustomSearchableDropDown(
+                                  items: typelist,
+                                  label: 'Select Type',
+                                  decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey)),
+                                  prefixIcon: Padding(
+                                    padding: const EdgeInsets.all(0.0),
+                                    child: Icon(Icons.search),
                                   ),
+                                  dropDownMenuItems:
+                                  typelist.map((item) {
+                                    return item.name.toString();}).toList() ?? [],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      selectedtype = value.name.toString();
+                                      selecttypeid = value.id.toString();
+                                      //viewModel.setSupplierValue(selected as String?);
+                                      print(selectedtype.toString());
+                                      print(selecttypeid.toString());
+                                    } else {
+                                      selectedtype = "";
+                                      selecttypeid = "";
+                                    }
+                                  },
                                 ),
                               ))
                           ],
@@ -224,6 +236,18 @@ class _UploadScreenState extends State<UploadScreen> {
                             return CustomDialogSingle(
                               title: "Failed",
                               description: 'Please Enter Weight',
+                            );
+                          },
+                        );
+                      }else if(selectedtype.isEmpty){
+                        showDialog(
+                          barrierColor: Colors.black26,
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) {
+                            return CustomDialogSingle(
+                              title: "Failed",
+                              description: 'Please Choose Weight Type',
                             );
                           },
                         );
@@ -309,13 +333,87 @@ class _UploadScreenState extends State<UploadScreen> {
     sessionwastageid = prefs.getString('WastageID').toString();
     sessionvehicleid = prefs.getString('VehicleId').toString();
     sessionjournylogendid = prefs.getString('JournyEndId').toString();
-    print(sessiontoken);
-    typelist = prefs.getStringList("TypeList") ?? [];
-    print(typelist.length);_selectedtype=typelist.first;
+    //print(sessiontoken);
+   // typelist = prefs.getStringList("TypeList") ?? [];
+    //print(typelist.length);_selectedtype=typelist.first;
     setState(() {
 
     });
+    getunitmaster();
+  }
 
+  Future<void>getunitmaster() async{
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
+    var body = {
+
+    };
+    print(jsonEncode(body));
+    setState(() {
+      loading = true;
+    });
+    try {
+      final response = await http.post(
+        // Uri.parse(AppConstants.LIVE_URL + 'api/journey-log/list'),
+          Uri.parse(AppConstants.LIVE_URL + 'api/weight-unit/list'),
+          body: jsonEncode(body),
+          headers: headers);
+      //print(jsonEncode(body));
+
+      //print('REPOSD  ${jsonDecode(response.body)['status']}');
+      setState(() {
+        loading = false;
+      });
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+         unitmodel=unitmastermodel.fromJson(jsonDecode(response.body));
+         typelist.clear();
+         for(int k=0;k<unitmodel.data!.length;k++){
+           typelist.add(Result(int.parse(unitmodel.data![k].id.toString()),unitmodel.data![k].name.toString()));
+         }
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: "Failed to Connect Login Api",
+            );
+          },
+        );
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
   }
   Future<void>getopenjourneygetid() async{
     var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
@@ -439,8 +537,9 @@ class _UploadScreenState extends State<UploadScreen> {
       "journey_status":"1",
       "vehicle_id":sessionvehicleid,
       "wastage_weight":weightController.text,
-      "wastage_measurement":_selectedtype.toString().isEmpty?"-":_selectedtype.toString(),
-      "route_assign_id":sessionjournylogendid.toString()
+      "wastage_measurement":selecttypeid.toString().isEmpty?"-":selecttypeid.toString(),
+      "route_assign_id":sessionjournylogendid.toString(),
+      //"measurement_type_id":selecttypeid
 
     };
     print(jsonEncode(body));
@@ -508,5 +607,9 @@ class _UploadScreenState extends State<UploadScreen> {
       throw Exception('Internet is down');
     }
   }
-
+}
+class Result{
+  int id;
+  String name;
+  Result(this.id, this.name);
 }

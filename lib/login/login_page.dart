@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -12,7 +11,6 @@ import 'package:unwaste/dashboard/dashboard.dart';
 import 'package:unwaste/login/login_model.dart';
 import '../CustomSingleDialog.dart';
 import '../customformbutton.dart';
-import '../main.dart';
 import 'package:http/http.dart'as http;
 
 
@@ -227,6 +225,7 @@ class _LoginPageState extends State<LoginPage> {
     var body = {
       "username": "${edt_mobileno.text}",
       "password": "${edt_password.text}",
+      "platform": "app"
     };
     setState(() {
       loading = true;

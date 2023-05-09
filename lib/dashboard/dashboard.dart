@@ -137,7 +137,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                 children: [
                   Expanded(child: Text('List of Apartments',style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),)),
                   TextButton.icon(onPressed: (){
-                    getstartjournysinglelist();
+                    checkjournystartornot();
                   }, icon: Icon(Icons.refresh,color: Colors.white), label: Text('Refresh',style: TextStyle(color: Colors.white))
                     ,style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Color(0xFF192C49)),maximumSize: MaterialStatePropertyAll(Size(120,36))),)
                 ],
@@ -164,13 +164,15 @@ class _DashboardpageState extends State<Dashboardpage> {
                               color: postionselect==index?Colors.white :Colors.white,
                               child: Row(
                                 children: [
-                                  Expanded(child: Container(
+                                  Expanded(child:
+                                  Container(
                                       margin: EdgeInsets.all(12),
                                       child: Container(
                                           padding: EdgeInsets.symmetric(vertical: 5,horizontal: 5),
                                           color: Colors.grey.shade200,
                                           child: Image.asset('assets/images/dashlogo.png',width: 40,height: 40,))),flex: 2),
-                                      Expanded(child: Column(
+                                  Expanded(child:
+                                  Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Padding(
@@ -269,7 +271,7 @@ class _DashboardpageState extends State<Dashboardpage> {
     sessionid = prefs.getString('ID').toString();
     sessionroutemasterid = prefs.getString('RouteId').toString();
     sessiondate = prefs.getString('Date').toString();
-    //getstartjournysinglelist();
+    // getstartjournysinglelist();
     checkjournystartornot();
     //setState(() {});
   }
@@ -314,9 +316,9 @@ class _DashboardpageState extends State<Dashboardpage> {
         } else {
           print('LENGTHHH${jsonDecode(response.body)['data'].length}');
           if(jsonDecode(response.body)['data']['is_open_journey'].toString()=="1"){
-            //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>ApartmentView()));
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>
-                ApartmentView()));
+            getalreadylogged();
+
+            //getstartjournysinglelist();
           }else{
             getstartjournysinglelist();
           }
@@ -354,6 +356,97 @@ class _DashboardpageState extends State<Dashboardpage> {
     }
   }
 
+  Future<void> getalreadylogged() async {
+    var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
+
+    var body = {
+      "date":AppConstants.cdate
+    };
+
+    setState(() {
+      loading = true;
+    });
+    try {
+      final response = await http.post(
+          Uri.parse(AppConstants.LIVE_URL + 'api/route-assigning/get-driver-assigned-route'),
+          body: jsonEncode(body),
+          headers: headers);
+      print(jsonEncode(body));
+
+      print('REPOSD  ${jsonDecode(response.body)['status']}');
+      setState(() {
+        loading = false;
+      });
+      if (response.statusCode == 200) {
+        if ('${jsonDecode(response.body)['success'].toString()}' == "false") {
+          showDialog(
+            barrierColor: Colors.black26,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return CustomDialogSingle(
+                title: "Failed",
+                description: '${jsonDecode(response.body)['message']}',
+              );
+            },
+          );
+        } else {
+          dashboardModel = DashboardModel.fromJson(jsonDecode(response.body));
+          print(jsonDecode(response.body));
+
+          Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+          final SharedPreferences prefs = await _prefs;
+          prefs.setString("RouteId", dashboardModel.data![postionselect].routeMasterId.toString());
+          //prefs.setString("RouteId", dashboardModel.data![postionselect].routeMasterId.toString());
+          prefs.setString("VehicleId", dashboardModel.data![postionselect].vehicleId.toString());
+          prefs.setString("JournyEndId", dashboardModel.data![postionselect].id.toString());
+          prefs.setString("RouteName", dashboardModel.data![postionselect].routeMasterName.toString());
+
+          setState(() {
+            /*if(dashboardModel.data!.length == 0){
+
+            }else{
+              startjourny==true;
+            }*/
+            startjourny==false;
+
+          });
+
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>
+              ApartmentView()));
+        }
+      } else {
+        showDialog(
+          barrierColor: Colors.black26,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return CustomDialogSingle(
+              title: "Failed",
+              description: "Failed to Connect Login Api",
+            );
+          },
+        );
+      }
+    } on SocketException {
+      setState(() {
+        loading = false;
+        showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
+      throw Exception('Internet is down');
+    }
+  }
   Future<void> getstartjournysinglelist() async {
     var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken',};
 

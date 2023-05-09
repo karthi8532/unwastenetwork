@@ -45,6 +45,7 @@ dependencies:
   intl: ^0.18.0
   image_picker: ^0.8.7+1
   file_picker: ^5.2.7
+  custom_searchable_dropdown: ^2.1.1
 #  flutter_local_notifications: ^13.0.0
 #  background_location_tracker: ^1.4.0
 #  location: ^4.4.0
