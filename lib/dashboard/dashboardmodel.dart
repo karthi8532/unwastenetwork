@@ -66,8 +66,8 @@ class Data {
   String? driverPhoto;
   String? vehicleName;
   String? vehicleNumber;
-  String? fuelType;
-  String? vehicleType;
+  var fuelType;
+  var vehicleType;
   List<Apartment>? apartment;
 
   Data(

@@ -33,6 +33,7 @@ class _UploadScreenState extends State<UploadScreen> {
   List<File> filelist = [];
   bool loading=false;
   String openlogid="";
+  var unloadpoint="";
   String selectedtype="";
   String sessionmobile="";
   String sessiontoken="";
@@ -66,6 +67,22 @@ class _UploadScreenState extends State<UploadScreen> {
         elevation:2,
         title: Text('Upload Garbage Weight',style: TextStyle(color: Colors.black87,fontSize: 16),),
         leading: Icon(Icons.arrow_back,color: Colors.black87,),
+       actions: [
+         Padding(
+           padding: const EdgeInsets.only(right: 20),
+           child: InkWell(
+             onTap: (){
+               getopenjourneygetid();
+             },
+             child: Row(
+               mainAxisAlignment: MainAxisAlignment.center,
+               children: [
+                 Icon(Icons.refresh,color: Colors.black,)
+               ],
+             ),
+           ),
+         )
+       ],
       ),
       body: SingleChildScrollView(
         child:
@@ -82,6 +99,11 @@ class _UploadScreenState extends State<UploadScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+
+                        Text('Unload Point : $unloadpoint',style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),),
+                        SizedBox(
+                          height: 10,
+                        ),
                         Text('Enter Weight(kg/ton)'),
                         SizedBox(height: 5,),
                         Row(
@@ -252,9 +274,10 @@ class _UploadScreenState extends State<UploadScreen> {
                           },
                         );
                       }else{
-                        getopenjourneygetid();
+                        //getopenjourneygetid();
+                        _getCurrentPosition(openlogid);
                       }
-                      //_getCurrentPosition();
+
                     },
                     child: Text('Submit', style: const TextStyle(color: Colors.white, fontSize: 20),),
                   ),
@@ -340,6 +363,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
     });
     getunitmaster();
+    getopenjourneygetid();
   }
 
   Future<void>getunitmaster() async{
@@ -452,10 +476,11 @@ class _UploadScreenState extends State<UploadScreen> {
             },
           );
         } else {
-          print('LENGTHHH${jsonDecode(response.body)['data'].length}');
+          print('LENGTHHH${jsonDecode(response.body)['data']}');
           if(jsonDecode(response.body)['data']['is_open_journey'].toString()=="1"){
             openlogid=jsonDecode(response.body)['data']['journey_log_id'].toString();
-            _getCurrentPosition(openlogid);
+            unloadpoint=jsonDecode(response.body)['data']['unload_point'].toString();
+            //_getCurrentPosition(openlogid);
           }else{
             showDialog(
               barrierColor: Colors.black26,

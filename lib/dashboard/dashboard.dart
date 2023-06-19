@@ -501,7 +501,7 @@ class _DashboardpageState extends State<Dashboardpage> {
           builder: (context) {
             return CustomDialogSingle(
               title: "Failed",
-              description: "Failed to Connect Login Api",
+              description: "Failed to Connect  Api",
             );
           },
         );

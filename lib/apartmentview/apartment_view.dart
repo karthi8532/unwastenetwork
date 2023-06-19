@@ -79,6 +79,22 @@ class _ApartmentViewState extends State<ApartmentView> {
             Navigator.pop(context);
           },
             child: Icon(Icons.arrow_back,color: Colors.black87,)),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: InkWell(
+              onTap: (){
+                getlist();
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                 Icon(Icons.refresh,color: Colors.black,)
+                ],
+              ),
+            ),
+          )
+        ],
       ),
       body: !loading?SingleChildScrollView(
         child: Padding(
@@ -123,7 +139,7 @@ class _ApartmentViewState extends State<ApartmentView> {
                               children: [
                                 Image.asset('assets/images/iconnavigate.png',color: AppColors.kdashblue,height: 18,width: 18,),
                                 SizedBox(width: 5,),
-                                Text('${model.data![0].apartment![0].area.toString()==null?"-":model.data![0].apartment![0].area.toString()},${model.data![0].apartment![0].address.toString()=="null"?"-":model.data![0].apartment![0].address.toString()}',style: TextStyle(fontSize: 10),),
+                                Text('${model.data![0].apartment![0].area.toString()=="null"?"-":model.data![0].apartment![0].area.toString()},${model.data![0].apartment![0].address.toString()=="null"?"-":model.data![0].apartment![0].address.toString()}',style: TextStyle(fontSize: 10),),
                               ],
                             ),
                           ),
@@ -201,13 +217,13 @@ class _ApartmentViewState extends State<ApartmentView> {
                   ),
                 ),*/
                 child:Visibility(
-                  visible: qtycon,
+                  visible:qtycon,
                   child: Container(
                     padding: EdgeInsets.all(8),
                     width: 150,
                     decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.lightBlue)),
+                        borderRadius: BorderRadius.circular(40),
+                        border: Border.all(color: Colors.black)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -217,15 +233,15 @@ class _ApartmentViewState extends State<ApartmentView> {
                           },
                           child: const Icon(
                             Icons.remove,
-                            size: 18,
-                            color: AppColors.lightBlue,
+                            size: 30,
+                            color:  Colors.black,
                           ),
                         ),
                         Text(
                           qty.toString(),
                           style: TextStyle(
-                            fontSize: 20,
-                            color: AppColors.lightBlue,
+                            fontSize: 30,
+                            color:  Colors.black
                           ),
                         ),
                         InkWell(
@@ -234,8 +250,8 @@ class _ApartmentViewState extends State<ApartmentView> {
                           },
                           child: Icon(
                             Icons.add,
-                            size: 18,
-                            color: AppColors.lightBlue,
+                            size: 30,
+                            color:  Colors.black
                           ),
                         ),
                       ],
@@ -435,7 +451,6 @@ class _ApartmentViewState extends State<ApartmentView> {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>
                 CompleteJournyPage()));
           }
-
 
         }
       } else {
