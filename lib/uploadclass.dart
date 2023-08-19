@@ -71,7 +71,7 @@ class _UploadScreenState extends State<UploadScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation:2,
-        title: Text('Upload Garbage Weight',style: TextStyle(color: Colors.black87,fontSize: 16),),
+        title: const Text('Upload Garbage Weight',style: TextStyle(color: Colors.black87,fontSize: 16),),
         leading: Icon(Icons.arrow_back,color: Colors.black87,),
        actions: [
          Padding(
@@ -80,7 +80,7 @@ class _UploadScreenState extends State<UploadScreen> {
              onTap: (){
                getopenjourneygetid();
              },
-             child: Row(
+             child: const  Row(
                mainAxisAlignment: MainAxisAlignment.center,
                children: [
                  Icon(Icons.refresh,color: Colors.black,)

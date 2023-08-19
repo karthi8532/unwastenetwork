@@ -79,7 +79,7 @@ class _ApartmentViewState extends State<ApartmentView> {
         title: const Text('Apartment View',style: TextStyle(color: Colors.black87,fontSize: 18),),
         leading: InkWell(
           onTap: (){
-            Navigator.pop(context);
+            //Navigator.pop(context);
           },
             child: const Icon(Icons.arrow_back,color: Colors.black87,)),
         actions: [
@@ -102,7 +102,8 @@ class _ApartmentViewState extends State<ApartmentView> {
       body: !loading? SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(left: 16,right: 16,top: 10),
-          child: model.data![0].apartment!.isNotEmpty?Column(
+          child: model.data![0].apartment!=null?
+          Column(
             children: [
               Card(
                 // Define the shape of the card

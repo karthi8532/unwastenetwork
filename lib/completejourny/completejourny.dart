@@ -32,6 +32,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
   bool loading=false;
   CompleteModel completemodel=CompleteModel();
   Timer? _timer;
+   bool isdataavailable=false;
   @override
   void initState() {
     getStringValuesSF();
@@ -51,16 +52,7 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        /*appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 2,
-          title: Text('Home-Dashboard',style: TextStyle(color: Colors.black87,fontSize: 16),),
-          actions: [
-            InkWell(onTap: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>Profileview()));
-            }, child: Image.asset('assets/images/avatarmale.png',height: 40,width: 40,))
-          ],
-        ),*/
+        
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 2,
@@ -134,13 +126,14 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
                   decoration: BoxDecoration(color: Colors.grey.shade100,borderRadius: BorderRadius.only(topLeft: Radius.circular(25),topRight: Radius.circular(25))),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child:completemodel.data!.isNotEmpty? ListView.builder(
+                    child:isdataavailable==true? ListView.builder(
                         itemCount:completemodel.data!.length,
                         itemBuilder: (BuildContext context, int index) {
                           return Card(
                             child: Row(
                               children: [
-                                Expanded(child: Container(
+                                Expanded(
+                                  child: Container(
                                     margin: EdgeInsets.all(12),
                                     child: Container(
                                         padding: EdgeInsets.symmetric(vertical: 5,horizontal: 5),
@@ -271,6 +264,9 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
       });
       if (response.statusCode == 200) {
         if (jsonDecode(response.body)['success'].toString() == "false") {
+          setState(() {
+            isdataavailable=false;
+          });
           showDialog(
             barrierColor: Colors.black26,
             context: context,
@@ -283,8 +279,10 @@ class _CompleteJournyPageState extends State<CompleteJournyPage> {
             },
           );
         } else {
-         /* dashboardModel = DashboardModel.fromJson(jsonDecode(response.body));
-          print(jsonDecode(response.body))*/;
+      
+           setState(() {
+            isdataavailable=true;
+          });
           completemodel=CompleteModel.fromJson(jsonDecode(response.body));
         }
       } else {

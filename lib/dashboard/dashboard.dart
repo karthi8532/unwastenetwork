@@ -43,7 +43,7 @@ class _DashboardpageState extends State<Dashboardpage> {
   late int postionselect = 0;
   var clickapartmentid = "";
   bool? startjourny;
-  late bool isdataavailable=false;
+  bool isdataavailable=false;
   @override
   void initState() {
     getStringValuesSF();
@@ -85,10 +85,10 @@ class _DashboardpageState extends State<Dashboardpage> {
                 )),
           ],
         ),
-        body: !loading
-            ? isdataavailable==true? Padding(
+        body: !loading ?Padding(
                 padding: const EdgeInsets.only(left: 16, right: 16, top: 10),
-                child: dashboardModel.data!.apartment!.isNotEmpty? Column(
+                child: 
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -136,15 +136,9 @@ class _DashboardpageState extends State<Dashboardpage> {
                                   const BorderRadius.all(Radius.circular(5)),
                               border: Border.all(color: Colors.green),
                             ),
-                            child: dashboardModel.data!.apartment!.isNotEmpty
-                                ? Text(
-                                    'Route : ${dashboardModel.data!.routeMasterName??""}',
-                                    style:const TextStyle(fontSize: 12),
-                                  )
-                                :
-                                Text(
-                              'Route : $sessionroutemasterid' ?? "",
-                              style:const TextStyle(fontSize: 12),
+                            child:Text(
+                               dashboardModel.data==null?  "Route : $sessionroutemasterid" : "Route : ${dashboardModel.data!.routeMasterName.toString()}"
+                             
                             ),
                           ),
                           Container(
@@ -177,7 +171,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                     ),
                     Row(
                       children: [
-                        const Expanded(
+                         const  Expanded(
                             child: Text(
                           'List of Apartments',
                           style: TextStyle(
@@ -210,7 +204,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                               topRight: Radius.circular(25))),
                       child: Padding(
                         padding: const EdgeInsets.all(13.0),
-                        child: dashboardModel.data.toString().isNotEmpty
+                        child: isdataavailable==true
                             ? ListView.builder(
                                 itemCount: 1,
                                 itemBuilder: (BuildContext context, int index) {
@@ -220,7 +214,7 @@ class _DashboardpageState extends State<Dashboardpage> {
                                         postionselect = index;
                                       });
                                     },
-                                    child: dashboardModel.data.toString().isNotEmpty
+                                    child:isdataavailable==true
                                         ? Card(
                                             color: postionselect == index
                                                 ? Colors.white
@@ -289,34 +283,37 @@ class _DashboardpageState extends State<Dashboardpage> {
                                                                   const SizedBox(
                                                                     width: 5,
                                                                   ),
-                                                                  Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                    children: [
-                                                                      Text(
-                                                                        dashboardModel
-                                                                            .data!
-                                                                            .apartment![index]
-                                                                            .area
-                                                                            .toString(),
-                                                                        style: const TextStyle(
-                                                                            fontSize:
-                                                                                12,
-                                                                            color:
-                                                                                Colors.black54),
-                                                                        overflow:
-                                                                            TextOverflow.ellipsis,
-                                                                      ),
-                                                                      Text(
-                                                                        dashboardModel.data!.apartment![index].address.toString(),
-                                                                        style: const TextStyle(
-                                                                            fontSize:
-                                                                                12,
-                                                                            color:
-                                                                                Colors.black54),
-                                                                        overflow:
-                                                                            TextOverflow.ellipsis,
-                                                                      ),
-                                                                    ],
+                                                                  Expanded(
+                                                                    flex: 1,
+                                                                    child: Column(
+                                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                                      children: [
+                                                                        Text(
+                                                                          dashboardModel
+                                                                              .data!
+                                                                              .apartment![index]
+                                                                              .area
+                                                                              .toString(),
+                                                                          style: const TextStyle(
+                                                                              fontSize:
+                                                                                  12,
+                                                                              color:
+                                                                                  Colors.black54),
+                                                                          overflow:
+                                                                              TextOverflow.ellipsis,
+                                                                        ),
+                                                                        Text(
+                                                                          dashboardModel.data!.apartment![index].address.toString(),
+                                                                          style: const TextStyle(
+                                                                              fontSize:
+                                                                                  12,
+                                                                              color:
+                                                                                  Colors.black54),
+                                                                          overflow:
+                                                                              TextOverflow.ellipsis,
+                                                                        ),
+                                                                      ],
+                                                                    ),
                                                                   ),
                                                                 ],
                                                               ),
@@ -384,16 +381,16 @@ class _DashboardpageState extends State<Dashboardpage> {
                                   );
                                 })
                             : const Center(
-                                child: Text('No Data!'),
+                                child: Text('No Apartment Found!'),
                               ),
                       ),
                     )),
                   ],
-                ):const Center(child: Text('No Apartments Found!'),),
+                )
               )
             : const Center(
                 child: CircularProgressIndicator(),
-              ):const Center(child: Text('No Apartment Found!'),),
+              ),
         bottomNavigationBar: Visibility(
           child: ElevatedButton(
             style: ButtonStyle(
@@ -483,9 +480,13 @@ class _DashboardpageState extends State<Dashboardpage> {
           openjourneymodel =
               CheckOpenJourneyModel.fromJson(jsonDecode(response.body));
           if (openjourneymodel.data!.isOpenJourney.toString()=="1") {
-            getalreadylogged();
+             if (mounted) {
+             getalreadylogged();
+            }
           } else {
+            if (mounted) {
             getstartjournysinglelist();
+            }
           }
         } else {
           if(!mounted) return;
@@ -562,9 +563,7 @@ class _DashboardpageState extends State<Dashboardpage> {
             },
           );
         } else {
-          setState(() {
-            isdataavailable=true;
-          });
+         
           dashboardModel = DashboardModel.fromJson(jsonDecode(response.body));
        
           Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -584,6 +583,7 @@ class _DashboardpageState extends State<Dashboardpage> {
             }else{
               startjourny==true;
             }*/
+             isdataavailable=true;
             startjourny == false;
           });
 
@@ -624,28 +624,28 @@ class _DashboardpageState extends State<Dashboardpage> {
       throw Exception('Internet is down');
     }
   }
+
   Future<void> getstartjournysinglelist() async {
-
-    try {
-
-     loading=true;
-
     var headers = {
       "Content-Type": "application/json",
       'Authorization': 'Bearer $sessiontoken',
     };
-
     var body = {
       "date": AppConstants.cdate,
       "driver_id": int.parse(sessiondriverID),
     };
-     loading=false;
-      final response = await http.post(
+    setState(() {
+      loading = true;
+    });
+    try {
+       final response = await http.post(
           Uri.parse(AppConstants.GETDRIVERASSIGNROUTE),
-          body: jsonEncode(body),
-          headers: headers);
-      if (mounted) return;    
-    
+          headers: headers,
+           body: jsonEncode(body),);
+     
+      setState(() {
+        loading = false;
+      });
       if (response.statusCode == 200) {
         if (jsonDecode(response.body)['success'].toString() == "false") {
         if (!mounted) return;
@@ -654,35 +654,41 @@ class _DashboardpageState extends State<Dashboardpage> {
         } else {
           var streetsFromJson = jsonDecode(response.body)['data'];
           if (streetsFromJson.length == 0) {
-            isdataavailable == false;
-          } else {
+                setState(() {
+                  isdataavailable = false;
+                  });
+                } else {
             // List<String> streetsList = new List<String>.from(streetsFromJson);
-            dashboardModel = DashboardModel.fromJson(jsonDecode(response.body));
-            isdataavailable == true;
+                dashboardModel = DashboardModel.fromJson(jsonDecode(response.body));
+                setState(() {
+                isdataavailable = true;
+            });
           }
         }
       } else {
-        if (!mounted) return;
-        _ackAlert(context,  response.reasonPhrase.toString());
-       
-      }
+       if (!mounted) return;
+        _ackAlert(context, '${jsonDecode(response.body)['message']}');
+        }
     } on SocketException {
-    loading=false;
-      showDialog(
-          context: context,
-          builder: (_) => const AlertDialog(
-              backgroundColor: Colors.black,
-              title: Text(
-                "No Response!..",
-                style: TextStyle(color: Colors.purple),
-              ),
-              content: Text(
-                "Slow Server Response or Internet connection",
-                style: TextStyle(color: Colors.white),
-              )));
+      setState(() {
+        loading = false;
+        showDialog(
+            context: context,
+            builder: (_) => const AlertDialog(
+                backgroundColor: Colors.black,
+                title: Text(
+                  "No Response!..",
+                  style: TextStyle(color: Colors.purple),
+                ),
+                content: Text(
+                  "Slow Server Response or Internet connection",
+                  style: TextStyle(color: Colors.white),
+                )));
+      });
       throw Exception('Internet is down');
     }
   }
+
 Future _ackAlert(BuildContext context,String message) {
   return showDialog(
     context: context,
