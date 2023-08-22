@@ -49,14 +49,22 @@ class _UploadScreenState extends State<UploadScreen> {
   late unitmastermodel unitmodel;
   TextEditingController weightController=TextEditingController();
   Timer? _timer;
+  late String cdatetime;
   @override
   void initState() {
     getStringValuesSF();
-    _timer = Timer.periodic(Duration(seconds: 30), (Timer t) {
+    _timer = Timer.periodic(const Duration(seconds: 30), (Timer t) {
+   // _update();
       PostLocationState().getCurrentPosition();
     });
+
     super.initState();
   }
+  // void _update() {
+  //   setState(() {
+  //     cdatetime = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
+  //   });
+  // }
   @override
   void dispose() {
     _timer?.cancel();
@@ -552,7 +560,7 @@ class _UploadScreenState extends State<UploadScreen> {
     endjourney(position.latitude,position.longitude,openlogid);
   }
   Future<void> endjourney(lat,lang,openlogid) async {
-
+    cdatetime = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
     var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken'};
     var body = {
 
@@ -564,7 +572,7 @@ class _UploadScreenState extends State<UploadScreen> {
       "end_lat":lat,
       "end_lon":lang,
       "remarks":"-",
-      "journey_end_date":AppConstants.cdatetime,
+      "journey_end_date":cdatetime,
       "journey_status":1,
       "vehicle_id":int.parse(sessionvehicleid),
       "waste_count":int.parse(weightController.text),
@@ -572,7 +580,6 @@ class _UploadScreenState extends State<UploadScreen> {
       "waste_id":2,
       "route_assign_id":int.parse(sessionjournylogendid.toString()),
       "photo":attachmentlist[0],
-
     };
     print(jsonEncode(body));
 

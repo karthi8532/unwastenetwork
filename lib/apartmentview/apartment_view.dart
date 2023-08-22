@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
@@ -52,6 +53,7 @@ class _ApartmentViewState extends State<ApartmentView> {
   int?nodata=0;
   bool qtycon =false;
   Timer? _timer;
+  late String cdatetime;
   @override
   initState() {
     super.initState();
@@ -59,9 +61,15 @@ class _ApartmentViewState extends State<ApartmentView> {
     getStringValuesSF();
 
    _timer = Timer.periodic(const Duration(seconds: 30), (Timer t) {
-      PostLocationState().getCurrentPosition();
+      //_update();
+     PostLocationState().getCurrentPosition();
     });
   }
+  // void _update() {
+  //   setState(() {
+  //      cdatetime = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
+  //   });
+  // }
   @override
   void dispose() {
     _timer?.cancel();
@@ -440,10 +448,9 @@ class _ApartmentViewState extends State<ApartmentView> {
   }
 
   Future<void> submitwastage() async {
-
+    cdatetime = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
     var headers = {"Content-Type": "application/json",'Authorization': 'Bearer $sessiontoken'};
     var body = {
-
       "vehicle_id":sessionvehicleID,
       "driver_id":sessiondriverID,
       "apt_id":model.data![0].apartment![currentapartmentcount].id.toString(),
@@ -455,7 +462,7 @@ class _ApartmentViewState extends State<ApartmentView> {
       "remarks":"",
       "route_assign_id":int.parse(sessionassignid),
       "measurement_id":0,
-      "pickup_at":AppConstants.cdatetime,
+      "pickup_at":cdatetime,
       "photo":'',
     };
 

@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
 
-    Timer(const Duration(seconds: 3),() =>  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>islogged==false//?*/LoginPage())));
+    Timer(const Duration(seconds: 3),() =>  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> (islogged==false || islogged==null)
        ? const LoginPage() : const Dashboardpage())));
     var assetsImage = const AssetImage(
         'assets/images/splash1.png',); //<- Creates an object that fetches an image.

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../appconstants/appconstants.dart';
@@ -30,12 +31,16 @@ class PostLocationState extends State<PostLocation> {
   late  bool serviceEnabled;
   late LocationPermission permission;
   bool islocationenable=false;
+  Timer? _timer;
+  late String cdatetime;
   @override
   void initState() {
     // TODO: implement initState
     getsession();
     super.initState();
   }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold();
@@ -51,6 +56,7 @@ class PostLocationState extends State<PostLocation> {
    // print(sessiontoken);
     //_getCurrentPosition();
   }
+
   void getStringValuesSF() async {
 
     //getsession().then((value) => _getCurrentPosition());
@@ -102,7 +108,7 @@ class PostLocationState extends State<PostLocation> {
     getCurrentPosition();
   }
  Future<void> postlocation(lat,lang,sessiontoken) async {
-
+   cdatetime = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
     var headers = {"Content-Type": "application/json",'Authorization': 'Bearer ${sessiontoken}',};
 
     var body = {
@@ -112,8 +118,7 @@ class PostLocationState extends State<PostLocation> {
       "vehicle_id":VehicleId,
       "lat":lat.toString(),
       "lng":lang.toString(),
-      "track_date":AppConstants.cdatetime,
-      "track_date":AppConstants.cdatetime,
+      "track_date":cdatetime,
       "status":0,
     };
     print(jsonEncode(body));
@@ -125,7 +130,6 @@ class PostLocationState extends State<PostLocation> {
       print(jsonEncode(body));
 
       print('REPOSD  ${jsonDecode(response.body)['status']}');
-
 
       if (response.statusCode == 200) {
         if ('${jsonDecode(response.body)['success'].toString()}' == "false") {

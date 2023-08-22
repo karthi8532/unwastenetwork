@@ -6,7 +6,7 @@ class AppConstants{
   static const String LOGINDESC = "Enter your mobile number and password to login\nto your account";
   static String cdate =  DateFormat("yyyy-MM-dd").format(DateTime.now());//2023-07-15";
   //static String cdate =  "2023-07-20";
-  static String cdatetime = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
+  //static String cdatetime = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
 
   static const String LIVE_URL="https://unwastenetwork.in/";
   static const String LOGIN_API = '${LIVE_URL}api/auth/login';
