@@ -4,7 +4,6 @@ class LoginModel {
   int? statusCode;
   Data? data;
   String? message;
-  dynamic? pagination;
   String? serverTimezone;
   String? serverDateTime;
 
@@ -14,7 +13,6 @@ class LoginModel {
         this.statusCode,
         this.data,
         this.message,
-        this.pagination,
         this.serverTimezone,
         this.serverDateTime});
 
@@ -24,7 +22,6 @@ class LoginModel {
     statusCode = json['status_code'];
     data = json['data'] != null ? new Data.fromJson(json['data']) : null;
     message = json['message'];
-    pagination = json['pagination'];
     serverTimezone = json['serverTimezone'];
     serverDateTime = json['serverDateTime'];
   }
@@ -38,7 +35,6 @@ class LoginModel {
       data['data'] = this.data!.toJson();
     }
     data['message'] = this.message;
-    data['pagination'] = this.pagination;
     data['serverTimezone'] = this.serverTimezone;
     data['serverDateTime'] = this.serverDateTime;
     return data;
